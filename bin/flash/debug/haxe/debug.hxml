@@ -1,0 +1,25 @@
+-main ApplicationMain 
+--macro openfl._internal.utils.ExtraParams.include()
+-cp C:/Development/HaxeToolkit/haxe/lib/openfl/5,1,5
+-D openfl=5.1.5
+--macro lime.Lib.extraParams()
+-cp C:/Development/HaxeToolkit/haxe/lib/lime/5,2,1
+-D lime=5.2.1
+-cp C:/Development/HaxeToolkit/haxe/lib/actuate/1,8,7
+-D actuate=1.8.7
+-cp src
+-cp C:\Development\HaxeToolkit\haxe\lib\openfl/5,1,5/externs/core/flash
+-cp C:\Development\HaxeToolkit\haxe\lib\openfl/5,1,5/externs/core/openfl
+-D native-trace
+-D tools=5.2.1
+-D flash-use-stage
+-D no-compilation
+-D openfl-flash
+-D fdb
+-D web
+-swf-lib bin/flash/debug/obj/assets.swf
+-swf-version 17
+-swf bin/flash/debug/bin/DoodleJump.swf
+-swf-header 480:640:60:FFFFFF
+-cp bin/flash/debug/haxe
+-debug
