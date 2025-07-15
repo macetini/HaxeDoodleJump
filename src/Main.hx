@@ -32,7 +32,7 @@ class Main extends GameItem
 	private var _HUDManager:HUDManager;
 	
 	private var _collisionManager:CollisionManager;
-	private var _difficulityManager:DifficultyManager;
+	private var _difficultyManager:DifficultyManager;
 
 	public function new()
 	{
@@ -76,7 +76,7 @@ class Main extends GameItem
 		_HUDManager = new HUDManager(_HUDLayer);
 		
 		_collisionManager = new CollisionManager();
-		_difficulityManager = new DifficultyManager();
+		_difficultyManager = new DifficultyManager();
 	}
 
 	private function addPlatforms():Void
@@ -175,7 +175,7 @@ class Main extends GameItem
 			_platformManager.updatePlatformsHorizontalPosition(newHorizontalChange);
 			_spawnManager.updateSpawnHorizontalPosition(newHorizontalChange);
 			
-			var newHeight:Float = _difficulityManager.increaseHeight(newHorizontalChange);
+			var newHeight:Float = _difficultyManager.increaseHeight(newHorizontalChange);
 			
 			_HUDManager.updateHeight(newHeight);
 		}
