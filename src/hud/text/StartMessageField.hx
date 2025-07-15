@@ -6,11 +6,10 @@ import openfl.text.TextFormatAlign;
 
 /**
  * ...
- * @author 
+ * @author J.C. Denton
  */
-class InfoMessageField extends TextField
+class StartMessageField extends TextField
 {
-
 	public function new() 
 	{
 		super();
@@ -18,13 +17,11 @@ class InfoMessageField extends TextField
 		var messageFormat:TextFormat = new TextFormat("Verdana", 18, 0x191900, true);
 		messageFormat.align = TextFormatAlign.CENTER;
 		
-		//width = stage.stageWidth;
-		
-		//y = stage.stageHeight >> 2;
+		width = 150;//stage.stageWidth;
+
 		defaultTextFormat = messageFormat;
 		selectable = false;
 		
 		text = "Press SPACE";
 	}
-	
 }
