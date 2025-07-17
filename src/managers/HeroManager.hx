@@ -1,49 +1,76 @@
 package managers;
+
 import items.Hero;
 import openfl.display.Sprite;
 
 /**
- * ...
- * @author J.C. Denton
- */
-class HeroManager
-{
-	private var _stageHeight:Float;
-	private var _stageWidth:Float;
-	
-	private var _layer:Sprite;
-	
-	private var _previusYPositon:Float;
-	
+	HeroManager is responsible for managing the hero character in the game.
+	It handles the hero's position and movement.	
+
+	@version 1.0
+	@date 2023-10-01
+	@author Marko Cettina
+**/
+class HeroManager {
+	var stageHeight:Float;
+	var stageWidth:Float;
+	var layer:Sprite;
+	var previusYPositon:Float;
+
+	/**
+		The hero object that is managed by this HeroManager.
+		It is created and added to the game layer when the game starts.
+	**/
 	public var hero(default, null):Hero;
+
+	/**
+		The horizontal change in the hero's position.
+		This is used to adjust the game view based on the hero's movement.
+	**/
 	public var horizontalChange(default, null):Float;
 
-	public function new(layer:Sprite)
-	{
-		_layer = layer;
-		
-		_stageHeight = layer.stage.stageHeight;
-		_stageWidth = layer.stage.stageWidth;
+	public function new(layer:Sprite) {
+		this.layer = layer;
+
+		stageHeight = layer.stage.stageHeight;
+		stageWidth = layer.stage.stageWidth;
 	}
-	
-	public function addHero():Void
-	{
+
+	/**
+		Creates and adds the hero to the game layer.
+		If the hero already exists, it does nothing.
+	**/
+	public function addHero() {
+		if (hero != null) {
+			return; // Hero already exists
+		}
+
+		horizontalChange = 0.0;
+		previusYPositon = layer.stage.stageHeight - 100; // Initial position at the bottom of the stage
+
+		createHero();
+	}
+
+	function createHero() {
 		hero = new items.Hero();
 
-		//Float, so I can`t use bit shifting
-		hero.x = _layer.stage.stageWidth / 2 - hero.width / 2;
-		hero.y = _layer.stage.stageHeight - hero.height;
+		final value = 2;
+		hero.x = layer.stage.stageWidth / value - hero.width / value;
+		hero.y = layer.stage.stageHeight - hero.height;
 
-		_layer.addChild(hero);
+		layer.addChild(hero);
 
-		_previusYPositon = _layer.stage.stageHeight - hero.height;
+		previusYPositon = layer.stage.stageHeight - hero.height;
 	}
-	
-	public function updateHorizontalChange():Float
-	{
-		horizontalChange = _previusYPositon - hero.realY;
-		_previusYPositon = hero.realY;
-		
+
+	/**
+		Updates the horizontal change based on the hero's current position.
+		@return Float
+	**/
+	public function updateHorizontalChange():Float {
+		horizontalChange = previusYPositon - hero.realY;
+		previusYPositon = hero.realY;
+
 		return horizontalChange;
 	}
 }

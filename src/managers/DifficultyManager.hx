@@ -1,45 +1,55 @@
 package managers;
+
 import items.Platform;
 import spawn.Boost;
 import spawn.Fly;
 
 /**
- * ...
- * @author J.C. Denton
- */
-class DifficultyManager
-{
-	public static inline var HEIGHT_DIVIDER:Float = 10;
-	
-	public static inline var DIFFICULITY_MULTIPLYER:Float = 10;
-	
-	public var _difficultyThreashold:Float = 100;
-	
-	private var _height:Float = 0.0;
-	
-	public function new()
-	{
+DifficultyManager class handles the game's difficulty progression.
+It increases the difficulty based on the player's progress and adjusts item weights accordingly.
+
+@version 1.0
+@date 2023-10-01
+@author Marko Cettina
+**/
+class DifficultyManager {
+	static inline final HEIGHT_DIVIDER:Float = 10;
+	static inline final DIFFICULITY_MULTIPLYER:Float = 10;
+
+	var difficultyThreashold:Float;
+	var height:Float;
+
+	public function new() {
+		difficultyThreashold = 100;
+		height = 0.0;
 	}
+
+	/**
+	Increases the height of the game based on the horizontal change.
+	If the height exceeds the difficulty threshold, it increases the difficulty.
 	
-	public function increaseHeight(horizontalChange:Float):Float
-	{
-		_height += horizontalChange / HEIGHT_DIVIDER;
-		
-		if (_height > _difficultyThreashold)
-		{
+	@param horizontalChange The change in horizontal position.
+	@throws Error if horizontalChange is negative.
+	@return Float
+	**/
+	public function increaseHeight(horizontalChange:Float):Float {
+		height += horizontalChange / HEIGHT_DIVIDER;
+
+		if (height > difficultyThreashold) {
 			increaseDifficulity();
 		}
-		
-		return _height;
+
+		return height;
 	}
-	
-	private function increaseDifficulity():Void
-	{
-		_difficultyThreashold *= DIFFICULITY_MULTIPLYER;
-		
+
+	function increaseDifficulity() {
+		difficultyThreashold *= DIFFICULITY_MULTIPLYER;
+
+		// This is a hacky way to increase the difficulty.		
+		// It should be done in a more structured way.
+		// But for such a small game, this is sufficient.
 		Platform.MovableWeight++;
 		Platform.BreakableWeight++;
-		
 		Fly.Weight++;
 		Boost.Weight++;
 	}

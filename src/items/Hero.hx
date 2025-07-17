@@ -5,177 +5,167 @@ import flash.events.KeyboardEvent;
 import flash.ui.Keyboard;
 
 /**
- * ...
- * @author J.C. Denton
- */
-class Hero extends GameItem
-{
-	public static inline var RADIUS:Int = 30;
-	public static inline var COLOR:UInt = 0x00FF00;
-	
-	public static inline var JUMP_BORDER:UInt = 150;
-	
-	public static inline var POWER_JUMP_MULTIPLYER:UInt = 3;
+	Hero class represents the player character in the Doodle Jump game.
+	It handles player input, movement, and jumping mechanics.
 
-	private var _keys:Array<Bool>;
+	@version 1.0
+	@date 2023-10-01
+	@author Marko Cettina
+**/
+class Hero extends GameItem {
+	/**
+		The radius of the hero character.
+		This is used for collision detection and rendering.
+	**/
+	public static inline final RADIUS:Int = 30;
 
-	private var _horizontalVelocity:Float = 6;
+	static inline final COLOR:UInt = 0x00FF00;
+	static inline final JUMP_BORDER:UInt = 150;
+	static inline final POWER_JUMP_MULTIPLYER:UInt = 3;
 
-	private var _verticalPull:Float = 1;
-	private var _initalJumpPower:Float = 65;
-	private var _currentJumpPower:Float = 0;
+	var keys:Array<Bool>;
 
-	private var _isJumping:Bool = false;
-	private var _floor:Int;
-	
-	private var _currentDeltaTime:Float;
-	
-	private var _isSuperJumpPending:Bool = false;
-	
-	public var realY(default,null):Float;
-	
-	public function new()
-	{
+	var horizontalVelocity:Float;
+	var verticalPull:Float;
+	var initalJumpPower:Float;
+	var currentJumpPower:Float;
+	var isJumping:Bool;
+	var floor:Int;
+	var currentDeltaTime:Float;
+	var isSuperJumpPending:Bool;
+
+	/**
+		The real Y position of the hero, used for calculations.
+		This is different from the display Y position due to the jumping mechanics.
+	**/
+	public var realY(default, null):Float;
+
+	public function new() {
 		super();
+
+		keys = [];
+
+		horizontalVelocity = 6;
+		verticalPull = 1;
+		initalJumpPower = 65;
+		currentJumpPower = 0;
+		isJumping = false;
+		isSuperJumpPending = false;
 
 		this.graphics.beginFill(COLOR);
 		this.graphics.drawCircle(RADIUS, RADIUS, RADIUS);
 		this.graphics.endFill();
-
-		_keys = [];		
 	}
 
-	public override function addedToStage(event:Event)
-	{
+	override public function addedToStage(event:Event) {
 		super.addedToStage(event);
-		
-		_floor = stage.stageHeight;
+
+		floor = stage.stageHeight;
 		realY = this.y;
 
 		this.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
-		this.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);		
+		this.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 	}
 
-	private function onKeyDown(evt:KeyboardEvent):Void
-	{
-		_keys[evt.keyCode] = true;
+	function onKeyDown(evt:KeyboardEvent) {
+		keys[evt.keyCode] = true;
 	}
 
-	private function onKeyUp(evt:KeyboardEvent):Void
-	{
-		_keys[evt.keyCode] = false;
+	function onKeyUp(evt:KeyboardEvent) {
+		keys[evt.keyCode] = false;
 	}
 
-	//TODO - refactor this
-	public override function update(deltaTime:Float):Void
-	{
-		_currentDeltaTime = deltaTime;
-		
-		if (_isJumping)
-		{
+	override public function update(deltaTime:Float) {
+		currentDeltaTime = deltaTime;
+
+		if (isJumping) {
 			checkJump();
 		}
-		else if (_keys[Keyboard.SPACE])
-		{
+		else if (keys[Keyboard.SPACE]) {
 			startJump();
 		}
-		
+
 		checkForThePositionChange();
-		
-		if (_keys[Keyboard.LEFT])
-		{
+
+		if (keys[Keyboard.LEFT]) {
 			moveLeft();
 		}
-
-		if (_keys[Keyboard.RIGHT])
-		{
+		else if (keys[Keyboard.RIGHT]) {
 			moveRight();
 		}
 	}
 
-	private function checkJump():Void
-	{
-		if (realY + this.height >= _floor)
-		{
+	function checkJump() {
+		if (realY + this.height >= floor) {
 			stopJump();
 		}
-		else
-		{
+		else {
 			doJump();
 		}
 	}
 
-	public function startJump():Void
-	{
-		if (_isSuperJumpPending)
-		{
-			_currentJumpPower = _initalJumpPower * POWER_JUMP_MULTIPLYER;
+	/**
+		Starts the jump process. If a super jump is pending, it uses a higher jump power.
+			Otherwise, it uses the initial jump power.	
+	**/
+	public function startJump() {
+		if (isSuperJumpPending) {
+			currentJumpPower = initalJumpPower * POWER_JUMP_MULTIPLYER;
 		}
-		else
-		{
-			_currentJumpPower = _initalJumpPower;
+		else {
+			currentJumpPower = initalJumpPower;
 		}
-		
-		_isSuperJumpPending = false;
-		
+		isSuperJumpPending = false;
 		realY = this.y;
-		_isJumping = true;
-
+		isJumping = true;
 		doJump();
 	}
 
-	private function doJump():Void
-	{
-		var jumpMovement:Float = _currentJumpPower * _currentDeltaTime;
-		
-		if (_currentJumpPower <= 0 || this.y > JUMP_BORDER)
-		{
+	function doJump() {
+		var jumpMovement:Float = currentJumpPower * currentDeltaTime;
+
+		if (currentJumpPower <= 0 || this.y > JUMP_BORDER) {
 			this.y -= jumpMovement;
 		}
-
 		realY -= jumpMovement;
-
-		_currentJumpPower -= _verticalPull;		
+		currentJumpPower -= verticalPull;
 	}
 
-	private function stopJump():Void
-	{
-		_isJumping = false;
-		realY = this.y = _floor - this.height;
+	function stopJump() {
+		isJumping = false;
+		realY = this.y = floor - this.height;
 	}
-	
-	public function activateSuperJump():Void
-	{
-		_isSuperJumpPending = true;
+
+	/**
+		Activates a super jump, which allows the hero to jump higher than normal.
+	**/
+	public function activateSuperJump() {
+		isSuperJumpPending = true;
 		startJump();
 	}
-	
-	public function die():Void
-	{
+
+	/**
+		Resets the hero's position to the center of the stage and stops any jumping.
+	**/
+	public function die() {
 		stopJump();
 		this.x = stage.stageWidth / 2 - this.width / 2;
 	}
-	
-	private function checkForThePositionChange():Void
-	{
-		if (this.x <= -1 * (this.width) )
-		{
+
+	function checkForThePositionChange() {
+		if (this.x <= -1 * (this.width)) {
 			this.x = stage.stageWidth;
 		}
-		else if (this.x >= stage.stageWidth)
-		{
+		else if (this.x >= stage.stageWidth) {
 			this.x = -1 * (this.width);
 		}
-
-	}
-	
-	private function moveLeft():Void
-	{
-		this.x -= _horizontalVelocity;
 	}
 
-	private function moveRight():Void
-	{
-		this.x += _horizontalVelocity;
+	function moveLeft() {
+		this.x -= horizontalVelocity;
+	}
+
+	function moveRight() {
+		this.x += horizontalVelocity;
 	}
 }

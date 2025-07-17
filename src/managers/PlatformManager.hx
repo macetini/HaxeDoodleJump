@@ -1,199 +1,216 @@
 package managers;
+
 import items.Platform;
 import openfl.display.Sprite;
 
 /**
- * ...
- * @author J.C. Denton
- */
-class PlatformManager
-{
-	public static inline var MAX_NUMBER_OF_PLATFORMS:Int = 30;
-	public static inline var FLOOR_OFFSET:Int = 165;
-	public static inline var SOON_VISIBLE_OFFSET:UInt = 30;
+	PlatformManager is responsible for managing the platforms in the game.
+	It handles the creation, recycling, and positioning of platforms.
 
-	public static inline var MINI_PLATFORM_VER_DISTANCE:Float = 25;
-	public static inline var MAX_PLATFORM_VER_DISTANCE:Float = 100;
-	
-	private var _stageHeight:Float;
-	private var _stageWidth:Float;
+	@version 1.0
+	@date 2023-10-01
+	@author Marko Cettina
+**/
+class PlatformManager {
+	static inline final MAX_NUMBER_OF_PLATFORMS:Int = 30;
+	static inline final FLOOR_OFFSET:Int = 165;
+	static inline final SOON_VISIBLE_OFFSET:UInt = 30;
 
-	private var _platforms:Array<Platform>;	
-	
-	private var _layer:Sprite;
+	static inline final MINI_PLATFORM_VER_DISTANCE:Float = 25;
+	static inline final MAX_PLATFORM_VER_DISTANCE:Float = 100;
 
-	public function new(layer:Sprite)
-	{
-		_layer = layer;
-		
-		_stageHeight = layer.stage.stageHeight;
-		_stageWidth = layer.stage.stageWidth;
-		
+	var stageHeight:Float;
+	var stageWidth:Float;
+
+	var platforms:Array<Platform>;
+
+	var layer:Sprite;
+
+	public function new(layer:Sprite) {
+		this.layer = layer;
+
+		stageHeight = layer.stage.stageHeight;
+		stageWidth = layer.stage.stageWidth;
+
 		createPlatforms();
 	}
-	
-	private function createPlatforms():Void
-	{
-		_platforms = new Array<Platform>();
+
+	function createPlatforms() {
+		platforms = [];
 
 		var newPlatform:Platform;
-		
-		var _lastPlatformtY:Float = 0.0;
 
-		for (i in 0...MAX_NUMBER_OF_PLATFORMS)
-		{
+		var lastPlatformtY:Float = 0.0;
+
+		for (i in 0...MAX_NUMBER_OF_PLATFORMS) {
 			newPlatform = new Platform();
-			newPlatform.y = _lastPlatformtY;
+			newPlatform.y = lastPlatformtY;
 
-			_lastPlatformtY -= getNewPlatformOffest_Y();
+			lastPlatformtY -= getNewY();
 
-			_platforms.push(newPlatform);
-		}		
+			platforms.push(newPlatform);
+		}
 	}
-	
-	public function addPlatforms():Void
-	{
+
+	/**
+		Adds the platforms to the game layer.
+		This method is called to initialize the platforms when the game starts.
+	**/
+	public function addPlatforms() {
 		var visiblePlaforms:List<Platform> = getVisiblePlaforms();
 
-		for (platform in visiblePlaforms)
-		{
-			_layer.addChild(platform);
+		for (platform in visiblePlaforms) {
+			layer.addChild(platform);
 		}
 
 		adjustPlatformsInitPos();
 	}
 
-	private function getNewPlatformOffest_Y():Float
-	{
+	function getNewY():Float {
 		return Platform.HEIGHT + (MAX_PLATFORM_VER_DISTANCE * Math.random()) + MINI_PLATFORM_VER_DISTANCE;
 	}
 
-	private function getNewPlatformOffest_X():Float
-	{
-		return  (_stageWidth - Platform.WIDTH) * Math.random();
+	function getNewX():Float {
+		return (stageWidth - Platform.WIDTH) * Math.random();
 	}
 
-	public function adjustPlatformsInitPos():Void
-	{
-		for (platform in _platforms)
-		{
-			platform.y += _stageHeight - FLOOR_OFFSET;
-			platform.x = getNewPlatformOffest_X();
+	/**
+		Adjusts the initial position of the platforms.
+		This method is called to set the platforms' positions when they are added to the game layer.
+	**/
+	public function adjustPlatformsInitPos() {
+		for (platform in platforms) {
+			platform.y += stageHeight - FLOOR_OFFSET;
+			platform.x = getNewX();
 		}
 	}
-	
-	public function addSoonVisiblePlatforms():Void
-	{
+
+	/**
+	Adds soon visible platforms to the game layer.
+	This method is called to ensure that platforms that are about to become visible are added
+	**/
+	public function addSoonVisiblePlatforms() {
 		var soonVisiblePlaforms:List<Platform> = getSoonVisiblePlaforms();
 
-		for (platform in soonVisiblePlaforms)
-		{
-			_layer.addChild(platform);
+		for (platform in soonVisiblePlaforms) {
+			layer.addChild(platform);
 		}
 	}
 
-	public function getVisiblePlaforms():List<Platform>
-	{
+	/**
+		Returns a list of platforms that are currently visible on the stage.
+		These platforms are within the stage height and have not been recycled.
+	
+		@return List<Platform> A list of currently visible platforms.
+	**/
+	public function getVisiblePlaforms():List<Platform> {
 		var visiblePlaforms:List<Platform> = new List<Platform>();
-
 		var lowBorder:Float;
 
-		for (platform in _platforms)
-		{
+		for (platform in platforms) {
 			lowBorder = platform.y;
 
-			if (platform.y >= 0 && platform.y <= _stageHeight)
-			{
+			if (platform.y >= 0 && platform.y <= stageHeight) {
 				visiblePlaforms.add(platform);
 			}
-			else
-			{
+			else {
 				break;
 			}
 		}
-
 		return visiblePlaforms;
 	}
 
-	public function getSoonVisiblePlaforms():List<Platform>
-	{
+	/**
+		Returns a list of platforms that are soon visible.
+		These platforms are within the stage height plus a small offset.
+	
+		@return List<Platform> A list of soon visible platforms.
+	**/
+	public function getSoonVisiblePlaforms():List<Platform> {
 		var soonVisiblePlaforms:List<Platform> = new List<Platform>();
 
-		for (platform in _platforms)
-		{
-			if (platform.y + Platform.HEIGHT <= _stageHeight + SOON_VISIBLE_OFFSET)
-			{
+		for (platform in platforms) {
+			if (platform.y + Platform.HEIGHT <= stageHeight + SOON_VISIBLE_OFFSET) {
 				soonVisiblePlaforms.add(platform);
 			}
-			else
-			{
+			else {
 				break;
 			}
 		}
 
 		return soonVisiblePlaforms;
 	}
-	
-	public function returnLastBoostablePlatform():Platform
-	{
+
+	/**
+		Returns the last boostable platform that does not have a boost.
+		This method is used to find a platform where a boost can be added.	
+
+		@return Platform|null The last boostable platform or null if none found.	
+	**/
+	public function returnLastBoostablePlatform():Platform {
 		var retPlatform:Platform;
-		
-		var i = _platforms.length;		
-		while (--i >= 0) 
-		{
-			retPlatform = _platforms[i];
-			
-			if (retPlatform.normal && !retPlatform.hasBoost)
-			{
+
+		var i = platforms.length;
+		while (--i >= 0) {
+			retPlatform = platforms[i];
+
+			if (retPlatform.normal && !retPlatform.hasBoost) {
 				return retPlatform;
 			}
 		}
-		
 		return null;
 	}
 
-	public function recycleExpiredPlatforms():List<Platform>
-	{
+	/**
+		Recycles expired platforms by removing them from the layer and resetting their position.
+		Returns a list of recycled platforms.	
+		@return List<Platform> A list of platforms that have been recycled.	
+	**/
+	public function recycleExpiredPlatforms():List<Platform> {
 		var expiredPlatforms:List<Platform> = new List<Platform>();
 
-		for (platform in _platforms)
-		{
-			if (platform.pendingRecycle || platform.y >= _stageHeight)
-			{
+		for (platform in platforms) {
+			if (platform.pendingRecycle || platform.y >= stageHeight) {
 				expiredPlatforms.add(platform);
-				_layer.removeChild(platform);
-				
+				layer.removeChild(platform);
 				platform.recycleFinished();
 			}
-			else
-			{
+			else {
 				break;
 			}
 		}
 
-		for (platform in expiredPlatforms)
-		{
+		for (platform in expiredPlatforms) {
 			recyclePlatform(platform);
 		}
 
 		return expiredPlatforms;
 	}
 
-	public function recyclePlatform(platform:Platform):Void
-	{
-		platform.y = _platforms[MAX_NUMBER_OF_PLATFORMS-1].y;
-		platform.y -= getNewPlatformOffest_Y();
+	/**
+		Recycles the platform by resetting its position and adding it to the end of the platforms list.
+		This method is called when a platform goes out of view and needs to be reused.
 
-		platform.x = getNewPlatformOffest_X();
+		@param platform The platform to recycle.	
+	**/
+	public function recyclePlatform(platform:Platform) {
+		platform.y = platforms[MAX_NUMBER_OF_PLATFORMS - 1].y;
+		platform.y -= getNewY();
 
-		_platforms.remove(platform);
-		_platforms.push(platform);
+		platform.x = getNewX();
+
+		platforms.remove(platform);
+		platforms.push(platform);
 	}
 
-	public function updatePlatformsHorizontalPosition(horizontalChange:Float):Void
-	{
-		for (platform in _platforms)
-		{
+	/**
+		Updates the horizontal position of all platforms based on the horizontal change.
+		This method is called to adjust the platforms' positions when the hero moves horizontally.
+
+		@param horizontalChange The amount of horizontal change to apply to each platform.
+	**/
+	public function updatePlatformsHorizontalPosition(horizontalChange:Float) {
+		for (platform in platforms) {
 			platform.y += horizontalChange;
 		}
 	}

@@ -1,4 +1,5 @@
 package managers;
+
 import items.Platform;
 import openfl.display.Sprite;
 import spawn.Boost;
@@ -6,253 +7,220 @@ import spawn.Fly;
 import spawn.SpawnItem;
 
 /**
- * ...
- * @author J.C. Denton
- */
+	SpawnManager is responsible for managing the spawning of items in the game.
+	It handles the creation, recycling, and positioning of spawn items such as Boost and Fly.
 
-class SpawnManager
-{
-	private var _spawnTypes:Array<Dynamic> = [Boost, Fly];
+	@version 1.0
+	@date 2023-10-01
+	@author Marko Cettina
+**/
+class SpawnManager {
+	var spawnTypes:Array<Class<SpawnItem>>;
+	var liveSpawn:Array<SpawnItem>;
 
-	private var _spawnPool:Map<String, Array<SpawnItem>>;
+	var spawnPool:Map<String, Array<SpawnItem>>;
 
-	private var _spawns:Array<SpawnItem>;
+	var layer:Sprite;
+	var stageHeight:Float;
+	var stageWidth:Float;
 
-	private var _layer:Sprite;
+	public function new(layer:Sprite) {
+		this.layer = layer;
 
-	private var _stageHeight:Float;
-	private var _stageWidth:Float;
-
-	public function new(layer:Sprite)
-	{
-		_layer = layer;
-
-		_stageHeight = layer.stage.stageHeight;
-		_stageWidth = layer.stage.stageWidth;
+		stageHeight = layer.stage.stageHeight;
+		stageWidth = layer.stage.stageWidth;
 
 		initSpawnPool();
 	}
 
-	private function initSpawnPool():Void
-	{
-		_spawns = new Array<SpawnItem>();
-		_spawnPool = new Map<String, Array<SpawnItem>>();
+	function initSpawnPool() {
+		spawnTypes = [Fly, Boost];
+		liveSpawn = [];
+		spawnPool = new Map<String, Array<SpawnItem>>();
 
-		var typeClassName:String;
-
-		for (spawnElem in _spawnTypes)
-		{
-			typeClassName = Type.getClassName(spawnElem);
-			_spawnPool[typeClassName] = new Array<SpawnItem>();
+		for (spawnElem in spawnTypes) {
+			var typeClassName:String = Type.getClassName(spawnElem);
+			spawnPool[typeClassName] = [];
 		}
 	}
 
 	/**
-	*
-	* Entity timout update. If entity has defined Timeout than it cant be spawned until timeout has finished.
-	*
-	* @param elapsed Elapsed time since the last frame.
-	*/
+		Entity timout update. If entity has defined Timeout than it cant be spawned until timeout has finished.
+		This method updates the timeout for each spawn type based on the elapsed time since the last frame.
 
-	public function updateTimeOut(elapsed:Float):Void
-	{
-		for (spawnElem in _spawnTypes)
-		{
-			if (spawnElem.TimeOutCounter > 0)
-			{
-				spawnElem.TimeOutCounter -= elapsed;
-			}
+		@param elapsed Elapsed time since the last frame.
+	**/
+	public function updateTimeOut(elapsed:Float) {
+		for (spawnType in spawnTypes) {
+			var spawnEmptyItem:SpawnItem = Type.createEmptyInstance(spawnType);
+			spawnEmptyItem.updateTimeOut(elapsed);
 		}
 	}
 
-	public function generateAndReturnSpawn():SpawnItem
-	{
-		return createSpawn(_spawnTypes);
-	}
-
 	/**
-	*
-	* Returne new spawn based on etities Weight. The higer the weight higher the chances of spawn.
-	*
-	* @param spawnArr Array of enteties.
-	*/
-	
-	private function createSpawn(spawnArr:Array<Dynamic>):SpawnItem
-	{
-		var localSpawnArr:Array<Dynamic> = returnTimedOutSpawn(spawnArr);
+		Adds a new spawn item to the game.
+		This method checks for available spawn items, resets their timeout, and returns the new spawn item.
+		If no items are available, it returns null.
 
-		var total:Float = returnLocalSpawnTotal(localSpawnArr);
+		@return SpawnItem The newly created spawn item or null if no items are available.
+	**/
+	public function getNewSpawnItem():SpawnItem {
+		var timedOutSpawn:Array<SpawnItem> = returnTimedOutSpawnItems();
 
-		if (total == 0)
-		{
+		var totalWeight:Float = getSpawnTotalWeight(timedOutSpawn);
+		if (totalWeight == 0) {
 			return null;
 		}
 
-		var retElem:SpawnItem = createSpawnFromTotal(total, localSpawnArr);
-
-		//trace(_spawnPool[Type.getClassName(Boost)].length + " - " +  _spawnPool[Type.getClassName(Fly)].length);
-
-		return retElem;
+		var newSpawnItem:SpawnItem = getSpawnItemByWeight(totalWeight, timedOutSpawn);
+		return newSpawnItem;
 	}
 
-	private function returnTimedOutSpawn(spawnArr:Array<Dynamic>):Array<Dynamic>
-	{
-		var retLocalSpawnArr:Array<Dynamic> = new Array<Dynamic>();
+	function returnTimedOutSpawnItems():Array<SpawnItem> {
+		var timedOutSpawn:Array<SpawnItem> = [];
 
-		for (spawnElemType in spawnArr)
-		{
-			if (spawnElemType.TimeOutCounter <= 0)
-			{
-				retLocalSpawnArr.push(spawnElemType);
-				spawnElemType.TimeOutCounter = spawnElemType.TimeOut;
+		for (type in spawnTypes) {
+			var spawnItem:SpawnItem = getSpawnItemFromPool(type);
+			if (spawnItem.getTimeOutCounter() <= 0) {
+				timedOutSpawn.push(spawnItem);
 			}
 		}
-
-		return retLocalSpawnArr;
+		return timedOutSpawn;
 	}
 
-	private function returnLocalSpawnTotal(localSpawnArr:Array<Dynamic>):Float
-	{
-		var retTotal:Float = 0.0;
-
-		for (spawnElemType in localSpawnArr)
-		{
-			retTotal += spawnElemType.Weight;
+	function restSpawnTimeOutCounter(timedOutSpawn:Array<SpawnItem>) {
+		for (spawn in timedOutSpawn) {
+			spawn.resetTimeOutCounter();
 		}
-
-		return retTotal;
 	}
 
-	private function createSpawnFromTotal(total:Float, localSpawnArr:Array<Dynamic>):SpawnItem
-	{
-		var retNewSpawn:SpawnItem = null;
+	function getSpawnTotalWeight(spawn:Array<SpawnItem>):Float {
+		var totalWeight:Float = 0.0;
+		for (spawnElem in spawn) {
+			totalWeight += spawnElem.getSpawnWeight();
+		}
+		return totalWeight;
+	}
 
-		var thresh:Float = Math.random() * total;		
-
-		for (spawnElemType in localSpawnArr)
-		{
-			thresh -= spawnElemType.Weight;
-
-			if (thresh <= 0)
-			{
-				retNewSpawn = createOrPoolSpawn(spawnElemType);
-				break;
+	function getSpawnItemByWeight(totalWeight:Float, spawn:Array<SpawnItem>):SpawnItem {
+		var weightThreshold:Float = Math.random() * totalWeight;
+		for (spawnElem in spawn) {
+			weightThreshold -= spawnElem.getSpawnWeight();
+			if (weightThreshold <= 0) {
+				return spawnElem;
 			}
 		}
-
-		return retNewSpawn;
+		return null;
 	}
 
-	private function createOrPoolSpawn(spawnElemType:Dynamic):SpawnItem
-	{
-		var retElem:SpawnItem = null;
-		
-		var typeClassName:String = Type.getClassName(spawnElemType);
+	function getSpawnItemFromPool(spawnElemType:Class<SpawnItem>):SpawnItem {
+		final typeClassName:String = Type.getClassName(spawnElemType);
 
-		if (_spawnPool[typeClassName].length == 0)
-		{
-			retElem = Type.createInstance(spawnElemType, []);
-			_spawns.push(retElem);
-		}
-		else
-		{
-			retElem = _spawnPool[typeClassName].pop();
-		}
+		final itemFoundInPool:Bool = spawnPool[typeClassName].length == 0;
 
-		retElem.active = true;
-		
-		return retElem;
+		var spawnItem:SpawnItem = itemFoundInPool ? Type.createInstance(spawnElemType, []) : spawnPool[typeClassName].pop();
+
+		return spawnItem;
 	}
 
-	public function addBoostSpawn(spawn:SpawnItem, boostablePlatform:Platform):Void
-	{
-		if (boostablePlatform != null)
-		{
-			setSpawnOnPlatform(boostablePlatform, spawn);
-			_layer.addChild(spawn);
+	/**
+		Adds a Boost spawn item to the game layer.
+		This method is used to add a Boost spawn item to the game layer for rendering.
+
+		@param spawnBoost The Boost spawn item to add.
+		@param boostablePlatform The platform on which the Boost should be spawned.
+	**/
+	public function addBoostSpawn(spawnBoost:SpawnItem, boostablePlatform:Platform) {
+		if (boostablePlatform != null) {
+			setSpawnOnPlatform(boostablePlatform, spawnBoost);
+			addSpawnItem(spawnBoost);
 		}
-		else
-		{
-			recycleSpawn(spawn);
+		else {
+			recycleSpawnItem(spawnBoost);
 		}
 	}
 
-	private function setSpawnOnPlatform(boostablePlatform:Platform, spawn:SpawnItem):Void
-	{
-										//Float - no bit shifting.
-		spawn.x = boostablePlatform.x + boostablePlatform.width / 2 - spawn.width / 2;
+	function setSpawnOnPlatform(boostablePlatform:Platform, spawn:SpawnItem) {
+		final value:Float = 0.5;
+		spawn.x = boostablePlatform.x + boostablePlatform.width * value - spawn.width * value;
 		spawn.y = boostablePlatform.y - spawn.height;
 
 		boostablePlatform.hasBoost = true;
 	}
 
-	public function addFlySpawn(spawn:SpawnItem):Void
-	{
-		_layer.addChild(spawn);
-	}
+	/**
+		Updates the horizontal position of all active spawn items based on the hero's movement.
+		This method adjusts the position of each spawn item to match the hero's horizontal change.
 
-	public function updateSpawnHorizontalPosition(horizontalChange:Float):Void
-	{
-		var activeSpawn:Array<SpawnItem> = getActiveSpawn();
-		for (spawn in activeSpawn)
-		{
+		@param horizontalChange The horizontal change in the hero's position.
+	**/
+	public function updateSpawnHorizontalPosition(horizontalChange:Float) {
+		var activeSpawn:Array<SpawnItem> = getLiveSpawn();
+		for (spawn in activeSpawn) {
 			spawn.y += horizontalChange;
 		}
 	}
 
-	public function recycleExpiredSpawn():Array<SpawnItem>
-	{
-		var expiredSpawn:Array<SpawnItem> = new Array<SpawnItem>();
-		
-		var activeSpawn:Array<SpawnItem> = getActiveSpawn();		
-		for (spawn in activeSpawn)
-		{
-			if (spawn.pendingRecycle || spawn.y >= _stageHeight)
-			{
+	/**
+		Recycles expired spawn items.
+		This method checks all active spawn items and recycles those that are marked for recycling or have moved out of the visible area.
+
+		@return Array<SpawnItem> An array of recycled spawn items.
+	**/
+	public function recycleExpiredSpawn():Array<SpawnItem> {
+		var expiredSpawn:Array<SpawnItem> = [];
+
+		var activeSpawn:Array<SpawnItem> = getLiveSpawn();
+		for (spawn in activeSpawn) {
+			if (spawn.pendingRecycle || spawn.y >= stageHeight) {
 				expiredSpawn.push(spawn);
-				recycleSpawn(spawn);
+				recycleSpawnItem(spawn);
 			}
 		}
-
 		return expiredSpawn;
 	}
-	
-	public function getActiveSpawn():Array<SpawnItem>
-	{
-		var activeSpawn:Array<SpawnItem> = new Array<SpawnItem>();
 
-		for (spawn in _spawns)
-		{
-			if (spawn.active)
-			{
-				activeSpawn.push(spawn);
-			}
+	/**
+		Gets all currently active spawn items.
+		This method returns an array of all spawn items that are currently active in the game.
+
+		@return Array<SpawnItem> An array of active spawn items.
+	**/
+	public function getLiveSpawn():Array<SpawnItem> {
+		return liveSpawn;
+	}
+
+	/**
+		Adds a fly spawn item to the game layer.
+		This method is used to add a fly spawn item to the game layer for rendering.
+
+		@param spawnItem The spawn item to add.
+	**/
+	public function addSpawnItem(spawnItem:SpawnItem) {
+		layer.addChild(spawnItem);
+		spawnItem.live = true;
+		spawnItem.resetTimeOutCounter();
+		liveSpawn.push(spawnItem);
+	}
+
+	/**
+		Recycles a spawn item by removing it from the layer and resetting its state.
+		This method is called when a spawn item is no longer needed or has been used.
+
+		@param spawnItem The spawn item to recycle.
+	**/
+	public function recycleSpawnItem(spawnItem:SpawnItem) {
+		if (layer.contains(spawnItem)) {
+			layer.removeChild(spawnItem);
 		}
-
-		return activeSpawn;
+		spawnItem.recycleFinished();
+		liveSpawn.remove(spawnItem);
+		poolSpawnItem(spawnItem);
 	}
 
-	public function recycleSpawn(spawn:SpawnItem):Void
-	{
-		if (_layer.contains(spawn))
-		{
-			_layer.removeChild(spawn);
-		}
-
-		spawn.recycleFinished();
-
-		poolSpawn(spawn);
+	function poolSpawnItem(spawnItem:SpawnItem) {
+		var type:Class<SpawnItem> = Type.getClass(spawnItem);
+		var typeClassName:String = Type.getClassName(type);
+		spawnPool[typeClassName].push(spawnItem);
 	}
-
-	private function poolSpawn(spawn:SpawnItem):Void
-	{
-		var type:Dynamic = Type.getClass(spawn);
-
-		var typeClassName:String = 	Type.getClassName(type);
-
-		_spawnPool[typeClassName].push(spawn);
-
-		//trace(_spawnPool[Type.getClassName(Boost)].length + " - " +  _spawnPool[Type.getClassName(Fly)].length);
-	}
-
 }

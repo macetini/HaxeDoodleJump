@@ -1,67 +1,70 @@
 package managers;
+
 import hud.text.HeightInfoMessageField;
 import hud.text.StartMessageField;
 import openfl.display.Sprite;
-import openfl.text.TextField;
-import openfl.text.TextFormat;
-import openfl.text.TextFormatAlign;
 
 /**
- * ...
- * @author J.C. Denton
- */
-class HUDManager
-{
-	private var _stageHeight:Float;
-	private var _stageWidth:Float;
-	
-	private var _layer:Sprite;
-	
-	private var _startMessageField:StartMessageField;
-	private var _heightInfoMessageField:HeightInfoMessageField;
-	
-	private var _height:Float = 0;
-	
-	public function new(layer:Sprite)
-	{
-		_layer = layer;
+ HUDManager is responsible for managing the Heads-Up Display (HUD) elements in the game.
+ It handles the display of messages and information such as the player's height.
+ 
+ @version 1.0
+ @date 2023-10-01	
+ @author Marko Cettina
+**/
+class HUDManager {
+	var stageHeight:Float;
+	var stageWidth:Float;
 
-		_stageHeight = layer.stage.stageHeight;
-		_stageWidth = layer.stage.stageWidth;
-		
+	var layer:Sprite;
+
+	var startMessageField:StartMessageField;
+	var heightInfoMessageField:HeightInfoMessageField;
+
+	var height:Float;
+
+	public function new(layer:Sprite) {
+		stageHeight = layer.stage.stageHeight;
+		stageWidth = layer.stage.stageWidth;
+
+		height = 0;
+		this.layer = layer;
+
 		initText();
 	}
-		
-	private function initText():Void
-	{
-		var messageFormat:TextFormat = new TextFormat("Verdana", 18, 0x191900, true);
-		messageFormat.align = TextFormatAlign.CENTER;		
-		
-		_startMessageField = new StartMessageField();
-		_layer.addChild(_startMessageField);
-		
-		_heightInfoMessageField = new HeightInfoMessageField(_layer);
-		_heightInfoMessageField.width = _stageWidth;
-		_heightInfoMessageField.y = 30;		
-		_layer.addChild(_heightInfoMessageField);
+
+	function initText() {
+		startMessageField = new StartMessageField();
+		layer.addChild(startMessageField);
+
+		heightInfoMessageField = new HeightInfoMessageField(layer);
+		heightInfoMessageField.width = stageWidth;
+		heightInfoMessageField.y = 30;
+		layer.addChild(heightInfoMessageField);
 	}
-	
-	public function hideInitText():Void
-	{
-		if (_startMessageField.visible)
-		{
-			_startMessageField.visible = false;
+
+	/**
+		Hides the initial text message displayed at the start of the game.
+		This method is called when the game starts or when the player begins playing.
+	**/
+	public function hideInitText() {
+		if (startMessageField.visible) {
+			startMessageField.visible = false;
 		}
 	}
-		
-	public function showInitText():Void
-	{
-		_startMessageField.visible = true;
+
+	function showInitText() {
+		startMessageField.visible = true;
 	}
-	
-	public function updateHeight(newHeight:Float):Void
-	{		
-		_height = Math.floor(newHeight);		
-		_heightInfoMessageField.updateHeight(_height);
-	}	
+
+	/**
+		Updates the height information displayed in the HUD.
+		This method is called to refresh the height information based on the hero's position.
+		
+		@param newHeight The new height value to display.
+	**/
+	public function updateHeight(newHeight:Float) {
+		height = Math.floor(newHeight);
+		heightInfoMessageField.updateHeight(height);
+	}
 }
