@@ -1,6 +1,7 @@
 # DoodleJump
-HAXE/OpenFL Doodle Jump Clone
-Demo available below. WARNING! The demo is using a free hosting service and does not have an SSL certificate.
+HAXE/OpenFL Doodle Jump Clone<br />
+HTML5 demo available at URL below.<br />
+WARNING! Using a free hosting service without an SSL certificate.
 
 http://macetini.atwebpages.com/doodlejump/
 
