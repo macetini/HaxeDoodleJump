@@ -1,5 +1,3 @@
-package;
-
 import flash.display.Sprite;
 import flash.events.Event;
 import items.GameItem;
