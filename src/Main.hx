@@ -87,7 +87,7 @@ class Main extends GameItem {
 
 		generateSpawn(deltaTime);
 
-		checkCoallision();
+		checkCollision();
 
 		updateHorizontalChange();
 
@@ -120,7 +120,7 @@ class Main extends GameItem {
 		}
 	}
 
-	function checkCoallision() {
+	function checkCollision() {
 		var liveSpawnItems:Array<SpawnItem> = spawnManager.getLiveSpawn();
 		var hero:Hero = heroManager.hero;
 
@@ -136,8 +136,8 @@ class Main extends GameItem {
 				return;
 			}
 
-			var visiblePlaforms:List<Platform> = platformManager.getVisiblePlaforms();
-			isColliding = collisionManager.checkCollidingWithPlatform(hero, visiblePlaforms);
+			var visiblePlatforms:List<Platform> = platformManager.getVisiblePlatforms();
+			isColliding = collisionManager.checkCollidingWithPlatform(hero, visiblePlatforms);
 
 			if (isColliding) {
 				return;

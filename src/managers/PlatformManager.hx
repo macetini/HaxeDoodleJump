@@ -40,13 +40,13 @@ class PlatformManager {
 
 		var newPlatform:Platform;
 
-		var lastPlatformtY:Float = 0.0;
+		var lastPlatformY:Float = 0.0;
 
 		for (i in 0...MAX_NUMBER_OF_PLATFORMS) {
 			newPlatform = new Platform();
-			newPlatform.y = lastPlatformtY;
+			newPlatform.y = lastPlatformY;
 
-			lastPlatformtY -= getNewY();
+			lastPlatformY -= getNewY();
 
 			platforms.push(newPlatform);
 		}
@@ -57,9 +57,9 @@ class PlatformManager {
 		This method is called to initialize the platforms when the game starts.
 	**/
 	public function addPlatforms() {
-		var visiblePlaforms:List<Platform> = getVisiblePlaforms();
+		var visiblePlatforms:List<Platform> = getVisiblePlatforms();
 
-		for (platform in visiblePlaforms) {
+		for (platform in visiblePlatforms) {
 			layer.addChild(platform);
 		}
 
@@ -90,9 +90,9 @@ class PlatformManager {
 	This method is called to ensure that platforms that are about to become visible are added
 	**/
 	public function addSoonVisiblePlatforms() {
-		var soonVisiblePlaforms:List<Platform> = getSoonVisiblePlaforms();
+		var soonVisible:List<Platform> = getSoonVisible();
 
-		for (platform in soonVisiblePlaforms) {
+		for (platform in soonVisible) {
 			layer.addChild(platform);
 		}
 	}
@@ -103,21 +103,21 @@ class PlatformManager {
 	
 		@return List<Platform> A list of currently visible platforms.
 	**/
-	public function getVisiblePlaforms():List<Platform> {
-		var visiblePlaforms:List<Platform> = new List<Platform>();
+	public function getVisiblePlatforms():List<Platform> {
+		var visiblePlatforms:List<Platform> = new List<Platform>();
 		var lowBorder:Float;
 
 		for (platform in platforms) {
 			lowBorder = platform.y;
 
 			if (platform.y >= 0 && platform.y <= stageHeight) {
-				visiblePlaforms.add(platform);
+				visiblePlatforms.add(platform);
 			}
 			else {
 				break;
 			}
 		}
-		return visiblePlaforms;
+		return visiblePlatforms;
 	}
 
 	/**
@@ -126,19 +126,19 @@ class PlatformManager {
 	
 		@return List<Platform> A list of soon visible platforms.
 	**/
-	public function getSoonVisiblePlaforms():List<Platform> {
-		var soonVisiblePlaforms:List<Platform> = new List<Platform>();
+	public function getSoonVisible():List<Platform> {
+		var soonVisiblePlatforms:List<Platform> = new List<Platform>();
 
 		for (platform in platforms) {
 			if (platform.y + Platform.HEIGHT <= stageHeight + SOON_VISIBLE_OFFSET) {
-				soonVisiblePlaforms.add(platform);
+				soonVisiblePlatforms.add(platform);
 			}
 			else {
 				break;
 			}
 		}
 
-		return soonVisiblePlaforms;
+		return soonVisiblePlatforms;
 	}
 
 	/**

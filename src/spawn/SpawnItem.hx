@@ -39,7 +39,7 @@ abstract class SpawnItem extends GameItem {
 	public abstract function updateTimeOut(elapsed:Float):Void;
 
 	/**
-		Returns the time remaining before the item can be respawned.
+		Returns the time remaining before the item can be respawn.
 		This is used to check if the item is ready to be spawned again.
 
 		@return Float The time remaining before respawn.
@@ -48,7 +48,7 @@ abstract class SpawnItem extends GameItem {
 
 	/**
 		Resets the timeout counter for the spawn item.
-		This is used to prepare the item for respawning after it has been used.
+		This is used to prepare the item for respawn after it has been used.
 	**/
 	public abstract function resetTimeOutCounter():Void;
 

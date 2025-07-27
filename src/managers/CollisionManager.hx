@@ -17,8 +17,8 @@ import spawn.SpawnItem;
 	@author Marko Cettina
 **/
 class CollisionManager {
-	static inline final HERO_COALISION_PERCENTAGE:Float = 0.85;
-	static inline final PLATFORM_COALISION_PERCENTAGE:Float = 0.25;
+	static inline final HERO_COLLISION_PERCENTAGE:Float = 0.85;
+	static inline final PLATFORM_COLLISION_PERCENTAGE:Float = 0.25;
 
 	var heroLowBorder:Float;
 	var heroHighBorder:Float;
@@ -30,10 +30,10 @@ class CollisionManager {
 	}
 
 	function calculateBorders() {
-		heroLowBorder = (Hero.RADIUS << 1) * HERO_COALISION_PERCENTAGE;
-		heroHighBorder = (Hero.RADIUS << 1) * (1 - HERO_COALISION_PERCENTAGE);
+		heroLowBorder = (Hero.RADIUS << 1) * HERO_COLLISION_PERCENTAGE;
+		heroHighBorder = (Hero.RADIUS << 1) * (1 - HERO_COLLISION_PERCENTAGE);
 
-		platformLowBorder = Platform.HEIGHT * PLATFORM_COALISION_PERCENTAGE;
+		platformLowBorder = Platform.HEIGHT * PLATFORM_COLLISION_PERCENTAGE;
 	}
 
 	/**
@@ -96,12 +96,12 @@ class CollisionManager {
 		This method uses rectangles to determine if the hero's bounding box intersects with the boost item's bounding box.
 
 		@param hero The hero object to check for collisions.
-		@param spwan The spawn item representing the boost.
+		@param spawn The spawn item representing the boost.
 		@return True if a collision is detected, false otherwise.
 	**/
-	public function isCollidingWithBoost(hero:Hero, spwan:SpawnItem):Bool {
+	public function isCollidingWithBoost(hero:Hero, spawn:SpawnItem):Bool {
 		var heroRect:Rectangle = new Rectangle(hero.x, hero.y + heroLowBorder, hero.width, platformLowBorder);
-		var boostRect:Rectangle = new Rectangle(spwan.x, spwan.y, spwan.width, spwan.height);
+		var boostRect:Rectangle = new Rectangle(spawn.x, spawn.y, spawn.width, spawn.height);
 
 		return heroRect.intersects(boostRect);
 	}
@@ -111,12 +111,12 @@ class CollisionManager {
 		If a collision is detected, it handles the interaction based on the type of platform.
 
 		@param hero The hero object to check for collisions.
-		@param visiblePlaforms A list of currently visible platforms.
+		@param visiblePlatforms A list of currently visible platforms.
 		@return True if a collision is detected, false otherwise.
 	**/
-	public function checkCollidingWithPlatform(hero:Hero, visiblePlaforms:List<Platform>):Bool {
-		for (platform in visiblePlaforms) {
-			if (isCollidingWithPlaform(hero, platform)) {
+	public function checkCollidingWithPlatform(hero:Hero, visiblePlatforms:List<Platform>):Bool {
+		for (platform in visiblePlatforms) {
+			if (isCollidingWithPlatform(hero, platform)) {
 				if (platform.breakable) {
 					platform.recycle();
 				}
@@ -139,7 +139,7 @@ class CollisionManager {
 		@param platform The platform to check for collisions against the hero.
 		@return True if a collision is detected, false otherwise.
 	**/
-	public function isCollidingWithPlaform(hero:Hero, platform:Platform):Bool {
+	public function isCollidingWithPlatform(hero:Hero, platform:Platform):Bool {
 		var heroRect:Rectangle = new Rectangle(hero.x, hero.y + heroLowBorder, hero.width, heroHighBorder);
 		var platformRect:Rectangle = new Rectangle(platform.x, platform.y, platform.width, platformLowBorder);
 
