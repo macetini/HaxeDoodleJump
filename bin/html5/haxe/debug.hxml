@@ -1,0 +1,28 @@
+-main ApplicationMain 
+--macro lime._internal.macros.DefineMacro.run()
+-cp C:/Development/libs/HaxeToolkit/haxe/lib/lime/8,2,2/src
+-D lime=8.2.2
+--macro openfl.utils._internal.ExtraParamsMacro.include()
+-cp C:/Development/libs/HaxeToolkit/haxe/lib/openfl/9,4,1/src
+-D openfl=9.4.1
+-cp src
+-D lime-threads
+-D tools=8.2.2
+-D lime-canvas
+-D howlerjs
+-D no-compilation
+-D openfl-html5
+-D lime-webgl
+-D lime-dom
+-D lime-howlerjs
+-D lime-html5
+-D openfl-disable-handle-error
+-D html5
+-D web
+--remap flash:openfl
+--connect
+6000
+-js bin/html5/bin/DoodleJump.js
+-cp bin/html5/haxe
+-D html5
+-debug
