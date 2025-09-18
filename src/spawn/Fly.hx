@@ -21,7 +21,7 @@ class Fly extends SpawnItem {
 	**/
 	public static inline var WIDTH:Int = 25;
 
-	static inline final ELIPSE_RADIUS:Int = 5;
+	static inline final ELLIPSE_RADIUS:Int = 5;
 	static inline final WAVE_HEIGHT:Int = 5;
 	static inline final WAVE_LENGTH:Int = 10;
 
@@ -53,7 +53,7 @@ class Fly extends SpawnItem {
 		super();
 
 		this.graphics.beginFill(COLOR);
-		this.graphics.drawRoundRect(0, 0, HEIGHT, WIDTH, ELIPSE_RADIUS, ELIPSE_RADIUS);
+		this.graphics.drawRoundRect(0, 0, HEIGHT, WIDTH, ELLIPSE_RADIUS, ELLIPSE_RADIUS);
 		this.graphics.endFill();
 	}
 
@@ -82,7 +82,7 @@ class Fly extends SpawnItem {
 	}
 
 	/**
-		Returns the time remaining before the item can be respawned.
+		Returns the time remaining before the item can be respawn.
 		This is used to check if the item is ready to be spawned again.
 
 		@return Float The time remaining before respawn.
@@ -93,7 +93,7 @@ class Fly extends SpawnItem {
 
 	/**
 		Resets the timeout counter for the Fly item.
-		This is used to prepare the item for respawning after it has been used.
+		This is used to prepare the item for respawn after it has been used.
 	**/
 	public function resetTimeOutCounter():Void {
 		TimeOutCounter = TIME_OUT;
