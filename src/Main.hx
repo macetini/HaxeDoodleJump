@@ -14,157 +14,224 @@ import spawn.Fly;
 import spawn.SpawnItem;
 
 /**
-Main class is the entry point of the Doodle Jump game.
-It initializes the game layers, managers, and handles the main game loop.
+	Main class is the entry point of the Doodle Jump game.
+ 
+	Responsibilities:
+	- Initializes display layers for platforms, spawns, hero, and HUD.
+	- Creates and manages game managers for platforms, spawns, hero, HUD, collision, and difficulty.
+	- Handles the main game loop, including updating game state, spawning items, collision detection, and HUD updates.
 
-@version 1.0
-@date 2023-10-01
-@author Marko Cettina
+	Layers:
+	- platformsLayer: Sprite container for platform objects.
+	- spawnsLayer: Sprite container for spawnable items (e.g., boosts, flies).
+	- heroLayer: Sprite container for the hero character.
+	- hudLayer: Sprite container for HUD elements.
+
+	Managers:
+	- platformManager: Handles platform creation, recycling, and positioning.
+	- spawnManager: Manages spawnable items, their creation, recycling, and positioning.
+	- heroManager: Controls hero creation, movement, and state.
+	- hudManager: Manages HUD display and updates.
+	- collisionManager: Detects and handles collisions between game objects.
+	- difficultyManager: Adjusts game difficulty and tracks player progress.
+
+	@version 1.0
+	@date 2023-10-01
+	@author Marko Cettina
 **/
 class Main extends GameItem {
-	var platformsLayer:Sprite;
-	var spawnsLayer:Sprite;
-	var heroLayer:Sprite;
-	var hudLayer:Sprite;
+    var platformsLayer:Sprite;
+    var spawnsLayer:Sprite;
+    var heroLayer:Sprite;
+    var hudLayer:Sprite;
 
-	var platformManager:PlatformManager;
-	var spawnManager:SpawnManager;
-	var heroManager:HeroManager;
-	var hudManager:HUDManager;
+    var platformManager:PlatformManager;
+    var spawnManager:SpawnManager;
+    var heroManager:HeroManager;
+    var hudManager:HUDManager;
 
-	var collisionManager:CollisionManager;
-	var difficultyManager:DifficultyManager;
+    var collisionManager:CollisionManager;
+    var difficultyManager:DifficultyManager;
 
-	public function new() {
-		super();
-	}
+	/**
+		Constructor for Main.
+		Initializes the base GameItem.
+	**/
+    public function new() {
+        super();
+    }
 
-	override public function addedToStage(event:Event) {
-		super.addedToStage(event);
+	/**
+		Called when the Main object is added to the stage.
+		Initializes layers and managers, then adds platforms and hero.
+		@param event Event triggered when added to stage.
+	**/
+    override public function addedToStage(event:Event) {
+        super.addedToStage(event);
 
-		createAndAddLayers();
-		createManagers();
-		addPlatforms();
-		addHero();
-	}
+        createAndAddLayers();
+        createManagers();
+        addPlatforms();
+        addHero();
+    }
 
-	function createAndAddLayers() {
-		platformsLayer = addNewLayer();
-		spawnsLayer = addNewLayer();
-		heroLayer = addNewLayer();
-		hudLayer = addNewLayer();
-	}
+	/**
+		Creates and adds display layers for platforms, spawns, hero, and HUD.
+	**/
+    function createAndAddLayers() {
+        platformsLayer = addNewLayer();
+        spawnsLayer = addNewLayer();
+        heroLayer = addNewLayer();
+        hudLayer = addNewLayer();
+    }
 
-	function addNewLayer():Sprite {
-		var newLayer:Sprite = new Sprite();
-		this.addChild(newLayer);
+	/**
+		Helper to create a new Sprite layer and add it to the display list.
+		@return The newly created Sprite layer.
+	**/
+    function addNewLayer():Sprite {
+        var newLayer:Sprite = new Sprite();
+        this.addChild(newLayer);
 
-		return newLayer;
-	}
+        return newLayer;
+    }
 
-	function createManagers() {
-		platformManager = new PlatformManager(platformsLayer);
-		spawnManager = new SpawnManager(spawnsLayer);
-		heroManager = new HeroManager(heroLayer);
-		hudManager = new HUDManager(hudLayer);
+	/**
+		Instantiates all game managers and assigns them to their respective layers.
+	**/
+    function createManagers() {
+        platformManager = new PlatformManager(platformsLayer);
+        spawnManager = new SpawnManager(spawnsLayer);
+        heroManager = new HeroManager(heroLayer);
+        hudManager = new HUDManager(hudLayer);
 
-		collisionManager = new CollisionManager();
-		difficultyManager = new DifficultyManager();
-	}
+        collisionManager = new CollisionManager();
+        difficultyManager = new DifficultyManager();
+    }
 
-	function addPlatforms() {
-		platformManager.addPlatforms();
-	}
+	/**
+		Adds initial platforms to the game using PlatformManager.
+	**/
+    function addPlatforms() {
+        platformManager.addPlatforms();
+    }
 
-	function addHero() {
-		heroManager.addHero();
-	}
+	/**
+		Adds the hero character to the game using HeroManager.
+	**/
+    function addHero() {
+        heroManager.addHero();
+    }
 
-	override public function update(deltaTime:Float) {
-		recycleExpiredItems();
+	/**
+		Main game loop, called every frame.
+		Handles recycling, spawning, collision, movement, HUD, and platform visibility.
+		@param deltaTime Time elapsed since last frame.
+	**/
+    override public function update(deltaTime:Float) {
+        recycleExpiredItems();
 
-		generateSpawn(deltaTime);
+        generateSpawn(deltaTime);
 
-		checkCollision();
+        checkCollision();
 
-		updateHorizontalChange();
+        updateHorizontalChange();
 
-		updateHud();
+        updateHud();
 
-		addSoonVisiblePlatforms();
-	}
+        addSoonVisiblePlatforms();
+    }
 
-	function recycleExpiredItems() {
-		platformManager.recycleExpiredPlatforms();
-		spawnManager.recycleExpiredSpawn();
-	}
+	/**
+		Removes or recycles expired platforms and spawn items.
+	**/
+    function recycleExpiredItems() {
+        platformManager.recycleExpiredPlatforms();
+        spawnManager.recycleExpiredSpawn();
+    }
 
-	function generateSpawn(deltaTime:Float) {
-		spawnManager.updateTimeOut(deltaTime);
+	/**
+		Handles logic for spawning new items based on game state and timeouts.
+		@param deltaTime Time elapsed since last frame.
+	**/
+    function generateSpawn(deltaTime:Float) {
+        spawnManager.updateTimeOut(deltaTime);
 
-		var newSpawn:SpawnItem = spawnManager.getNewSpawnItem();
+        var newSpawn:SpawnItem = spawnManager.getNewSpawnItem();
 
-		if (newSpawn != null) {
-			if (Std.is(newSpawn, Boost)) {
-				var boostablePlatform:Platform = platformManager.returnLastBoostablePlatform();
-				spawnManager.addBoostSpawn(newSpawn, boostablePlatform);
-				return;
-			}
+        if (newSpawn != null) {
+            if (Std.is(newSpawn, Boost)) {
+                var boostablePlatform:Platform = platformManager.returnLastBoostablePlatform();
+                spawnManager.addBoostSpawn(newSpawn, boostablePlatform);
+                return;
+            }
 
-			if (Std.is(newSpawn, Fly)) {
-				spawnManager.addSpawnItem(newSpawn);
-				return;
-			}
-		}
-	}
+            if (Std.is(newSpawn, Fly)) {
+                spawnManager.addSpawnItem(newSpawn);
+                return;
+            }
+        }
+    }
 
-	function checkCollision() {
-		var liveSpawnItems:Array<SpawnItem> = spawnManager.getLiveSpawn();
-		var hero:Hero = heroManager.hero;
+	/**
+		Checks for collisions between the hero and other objects (spawns, boosts, platforms).
+	**/
+    function checkCollision() {
+        var liveSpawnItems:Array<SpawnItem> = spawnManager.getLiveSpawn();
+        var hero:Hero = heroManager.hero;
 
-		var isColliding:Bool = collisionManager.checkCollidingWithSpawn(hero, liveSpawnItems);
+        var isColliding:Bool = collisionManager.checkCollidingWithSpawn(hero, liveSpawnItems);
 
-		if (isColliding) {
-			return;
-		}
+        if (isColliding) {
+            return;
+        }
 
-		if (heroManager.horizontalChange <= 0) {
-			isColliding = collisionManager.checkCollidingWithBoost(hero, liveSpawnItems);
-			if (isColliding) {
-				return;
-			}
+        if (heroManager.horizontalChange <= 0) {
+            isColliding = collisionManager.checkCollidingWithBoost(hero, liveSpawnItems);
+            if (isColliding) {
+                return;
+            }
 
-			var visiblePlatforms:List<Platform> = platformManager.getVisiblePlatforms();
-			isColliding = collisionManager.checkCollidingWithPlatform(hero, visiblePlatforms);
+            var visiblePlatforms:List<Platform> = platformManager.getVisiblePlatforms();
+            isColliding = collisionManager.checkCollidingWithPlatform(hero, visiblePlatforms);
 
-			if (isColliding) {
-				return;
-			}
-		}
-	}
+            if (isColliding) {
+                return;
+            }
+        }
+    }
 
-	function updateHorizontalChange() {
-		var newHorizontalChange:Float = heroManager.updateHorizontalChange();
+	/**
+		Updates horizontal movement and related game state, including platform and spawn positions and HUD height.
+	**/
+    function updateHorizontalChange() {
+        var newHorizontalChange:Float = heroManager.updateHorizontalChange();
 
-		if (newHorizontalChange > 0) {
-			platformManager.updatePlatformsHorizontalPosition(newHorizontalChange);
-			spawnManager.updateSpawnHorizontalPosition(newHorizontalChange);
+        if (newHorizontalChange > 0) {
+            platformManager.updatePlatformsHorizontalPosition(newHorizontalChange);
+            spawnManager.updateSpawnHorizontalPosition(newHorizontalChange);
 
-			var newHeight:Float = difficultyManager.increaseHeight(newHorizontalChange);
+            var newHeight:Float = difficultyManager.increaseHeight(newHorizontalChange);
 
-			hudManager.updateHeight(newHeight);
-		}
-	}
+            hudManager.updateHeight(newHeight);
+        }
+    }
 
-	function updateHud() {
-		var horizontalChange:Float = heroManager.horizontalChange;
+	/**
+		Updates HUD elements based on game state, hides initial text when movement starts.
+	**/
+    function updateHud() {
+        var horizontalChange:Float = heroManager.horizontalChange;
 
-		if (horizontalChange != 0) {
-			hudManager.hideInitText();
-		}
-	}
+        if (horizontalChange != 0) {
+            hudManager.hideInitText();
+        }
+    }
 
-	function addSoonVisiblePlatforms() {
-		platformManager.addSoonVisiblePlatforms();
-	}
+	/**
+		Adds platforms that are about to become visible.
+	**/
+    function addSoonVisiblePlatforms() {
+        platformManager.addSoonVisiblePlatforms();
+    }
 }
