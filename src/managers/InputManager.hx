@@ -96,8 +96,27 @@ class InputManager {
 	}
 
 	function onAccelerometerUpdate(event:AccelerometerEvent) {
-		// Note: The values are in G-forces (m/s² divided by 9.8)
-		accelerationX = event.accelerationY; // Use Y-axis tilt for game X movement
+		// Get the absolute (magnitude) of the X and Y sensor readings
+		var absX:Float = Math.abs(event.accelerationX);
+		var absY:Float = Math.abs(event.accelerationY);
+
+		// Determine which axis (X or Y) is currently experiencing the greatest tilt
+		if (absX > absY) {
+			// The device is mostly in PORTRAIT orientation (or near it).
+			// Sensor's X-axis is dominant.
+
+			// FIX: In portrait mode, tilting right gives a NEGATIVE X-acceleration.
+			// We must invert the sign to match the expected direction (right = positive).
+			accelerationX = -event.accelerationX;
+		}
+		else {
+			// The device is mostly in LANDSCAPE orientation (or near it).
+			// Sensor's Y-axis is dominant.
+
+			// This was already correct: tilting the device right (usually positive Y-acceleration) 
+			// needs to be inverted to align with the game's X-direction.
+			accelerationX = event.accelerationY;
+		}
 	}
 
 	/**
