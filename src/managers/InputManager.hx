@@ -91,7 +91,7 @@ class InputManager {
 		var mouseX:Float = event.stageX;
 
 		var deltaX:Float = mouseX - prevMouseX;
-		direction = js.lib.Math.sign(deltaX);
+		direction = deltaX / Math.abs(deltaX);
 		prevMouseX = mouseX;
 	}
 
