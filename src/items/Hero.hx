@@ -72,7 +72,8 @@ class Hero extends GameItem {
 
 		if (isJumping) {
 			updateJumpMovement();
-		} else if (active) {
+		}
+		else if (active) {
 			jump();
 		}
 
@@ -106,7 +107,8 @@ class Hero extends GameItem {
 	public function jump() {
 		if (isSuperJumpPending) {
 			currentJumpPower = initialJumpPower * POWER_JUMP_MULTIPLAYER;
-		} else {
+		}
+		else {
 			currentJumpPower = initialJumpPower;
 		}
 
@@ -153,7 +155,8 @@ class Hero extends GameItem {
 	function checkForThePositionChange() {
 		if (this.x <= -1 * (this.width)) {
 			this.x = stage.stageWidth;
-		} else if (this.x >= stage.stageWidth) {
+		}
+		else if (this.x >= stage.stageWidth) {
 			this.x = -1 * (this.width);
 		}
 	}

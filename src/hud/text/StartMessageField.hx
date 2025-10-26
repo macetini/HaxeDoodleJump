@@ -14,9 +14,11 @@ class StartMessageField extends TextField {
 
 		var messageFormat:TextFormat = new TextFormat("Verdana", 16, 0x191900, true);
 		messageFormat.align = TextFormatAlign.CENTER;
-
 		defaultTextFormat = messageFormat;
+
 		selectable = false;
+		mouseEnabled = false;
+		autoSize = "center";
 
 		text = "Press SPACE or Tap(Click) Screen to start!";
 	}

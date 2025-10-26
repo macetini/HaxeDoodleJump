@@ -17,12 +17,11 @@ class HeightInfoMessageField extends TextField {
 
 		var messageFormat:TextFormat = new TextFormat("Verdana", 18, 0x191900, true);
 		messageFormat.align = TextFormatAlign.CENTER;
-
 		defaultTextFormat = messageFormat;
+
 		selectable = false;
 		mouseEnabled = false;
 		autoSize = "center";
-		//text = "Height: 0";
 	}
 
 	/**

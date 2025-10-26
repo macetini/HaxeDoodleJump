@@ -48,7 +48,8 @@ class HeroManager {
 
 		if (type == InputEventType.DIR_CHANGE) {
 			hero.move(event.get_xAxis());
-		} else if (type == InputEventType.KEY_PRESS) {
+		}
+		else if (type == InputEventType.KEY_PRESS) {
 			hero.activate();
 		}
 	}

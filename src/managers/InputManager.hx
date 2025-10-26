@@ -8,6 +8,14 @@ import openfl.display.Stage;
 import openfl.events.KeyboardEvent;
 import openfl.events.MouseEvent;
 
+/**
+	InputManager is responsible for handling user input in the game.
+	It handles keyboard and mouse input, as well as accelerometer input if available.
+
+	@version 1.0
+	@date 2023-10-01
+	@author Marko Cettina
+**/
 class InputManager {
 	// --- Stage Reference (dispatches events) ---
 	var stage:Stage;
@@ -52,9 +60,11 @@ class InputManager {
 	function onKeyDown(event:KeyboardEvent) {
 		if (event.keyCode == Keyboard.LEFT) {
 			direction = -1;
-		} else if (event.keyCode == Keyboard.RIGHT) {
+		}
+		else if (event.keyCode == Keyboard.RIGHT) {
 			direction = 1;
-		} else if (event.keyCode == Keyboard.SPACE) {
+		}
+		else if (event.keyCode == Keyboard.SPACE) {
 			stage.dispatchEvent(new InputEvent(0, InputEventType.KEY_PRESS));
 		}
 	}
@@ -75,8 +85,7 @@ class InputManager {
 		stage.dispatchEvent(new InputEvent(0, InputEventType.KEY_PRESS));
 	}
 
-	// Disabled, as the effect is not desired
-
+	// Disabled, mouse movement is difficult to control
 	@:deprecated
 	function onMouseMove(event:MouseEvent) {
 		var mouseX:Float = event.stageX;
@@ -103,7 +112,8 @@ class InputManager {
 			if (accelerationX > ACCEL_THRESHOLD) {
 				// Tilted right
 				finalDirection = 1;
-			} else if (accelerationX < -ACCEL_THRESHOLD) {
+			}
+			else if (accelerationX < -ACCEL_THRESHOLD) {
 				// Tilted left
 				finalDirection = -1;
 			}

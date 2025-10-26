@@ -892,7 +892,7 @@ ApplicationMain.main = function() {
 ApplicationMain.create = function(config) {
 	var app = new openfl_display_Application();
 	ManifestResources.init(config);
-	app.meta.h["build"] = "26";
+	app.meta.h["build"] = "27";
 	app.meta.h["company"] = "Marko Cettina";
 	app.meta.h["file"] = "DoodleJump";
 	app.meta.h["name"] = "DoodleJump";
@@ -9980,6 +9980,8 @@ var hud_text_StartMessageField = function() {
 	messageFormat.align = 0;
 	this.set_defaultTextFormat(messageFormat);
 	this.set_selectable(false);
+	this.mouseEnabled = false;
+	this.set_autoSize(openfl_text_TextFieldAutoSize.fromString("center"));
 	this.set_text("Press SPACE or Tap(Click) Screen to start!");
 };
 $hxClasses["hud.text.StartMessageField"] = hud_text_StartMessageField;

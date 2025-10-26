@@ -5,12 +5,12 @@ import hud.text.StartMessageField;
 import openfl.display.Sprite;
 
 /**
- HUDManager is responsible for managing the Heads-Up Display (HUD) elements in the game.
- It handles the display of messages and information such as the player's height.
- 
- @version 1.0
- @date 2023-10-01	
- @author Marko Cettina
+	HUDManager is responsible for managing the Heads-Up Display (HUD) elements in the game.
+	It handles the display of messages and information such as the player's height.
+
+	@version 1.0
+	@date 2023-10-01	
+	@author Marko Cettina
 **/
 class HUDManager {
 	var stageHeight:Float;
@@ -34,7 +34,6 @@ class HUDManager {
 	}
 
 	function initText() {
-
 		heightInfoMessageField = new HeightInfoMessageField(layer);
 		heightInfoMessageField.width = stageWidth;
 		heightInfoMessageField.y = 40;
@@ -63,7 +62,7 @@ class HUDManager {
 	/**
 		Updates the height information displayed in the HUD.
 		This method is called to refresh the height information based on the hero's position.
-		
+
 		@param newHeight The new height value to display.
 	**/
 	public function updateHeight(newHeight:Float) {
