@@ -1,43 +1,12 @@
 package managers;
 
+import managers.meta.InputEvent;
 import openfl.ui.Keyboard;
-import openfl.events.Event;
 import openfl.events.AccelerometerEvent;
 import openfl.sensors.Accelerometer;
 import openfl.display.Stage;
 import openfl.events.KeyboardEvent;
 import openfl.events.MouseEvent;
-
-enum InputEventType {
-	DIR_CHANGE;
-	KEY_PRESS;
-}
-
-class InputEvent extends Event {
-	public static inline final NAME:String = "inputEvent";
-
-	final xAxis:Float;
-	final inputType:InputEventType;
-
-	public function new(direction:Float, inputType:InputEventType, bubbles:Bool = true, cancelable:Bool = false) {
-		super(NAME, bubbles, cancelable);
-
-		this.xAxis = direction;
-		this.inputType = inputType;
-	}
-
-	public function get_xAxis():Float {
-		return xAxis;
-	}
-
-	public function get_inputType():InputEventType {
-		return inputType;
-	}
-
-	override public function clone():Event {
-		return new InputEvent(xAxis, inputType, bubbles, cancelable);
-	}
-}
 
 class InputManager {
 	// --- Stage Reference (dispatches events) ---
@@ -99,7 +68,7 @@ class InputManager {
 	// --- Mouse Event Handlers ---
 	function setupMouseEvents() {
 		stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-		//stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove); // Disabled, as the effect is not desired
+		// stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove); // Disabled, as the effect is not desired
 	}
 
 	function onMouseDown(event:MouseEvent) {
@@ -107,6 +76,7 @@ class InputManager {
 	}
 
 	// Disabled, as the effect is not desired
+
 	@:deprecated
 	function onMouseMove(event:MouseEvent) {
 		var mouseX:Float = event.stageX;

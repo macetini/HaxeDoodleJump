@@ -22,7 +22,7 @@ class HeightInfoMessageField extends TextField {
 		selectable = false;
 		mouseEnabled = false;
 		autoSize = "center";
-		text = "Height: 0";
+		//text = "Height: 0";
 	}
 
 	/**

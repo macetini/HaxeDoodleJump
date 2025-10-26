@@ -34,13 +34,16 @@ class HUDManager {
 	}
 
 	function initText() {
-		startMessageField = new StartMessageField();
-		layer.addChild(startMessageField);
 
 		heightInfoMessageField = new HeightInfoMessageField(layer);
 		heightInfoMessageField.width = stageWidth;
-		heightInfoMessageField.y = 30;
+		heightInfoMessageField.y = 40;
 		layer.addChild(heightInfoMessageField);
+
+		startMessageField = new StartMessageField();
+		startMessageField.width = stageWidth;
+		startMessageField.y = 40;
+		layer.addChild(startMessageField);
 	}
 
 	/**

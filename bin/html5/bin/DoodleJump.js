@@ -892,7 +892,7 @@ ApplicationMain.main = function() {
 ApplicationMain.create = function(config) {
 	var app = new openfl_display_Application();
 	ManifestResources.init(config);
-	app.meta.h["build"] = "25";
+	app.meta.h["build"] = "26";
 	app.meta.h["company"] = "Marko Cettina";
 	app.meta.h["file"] = "DoodleJump";
 	app.meta.h["name"] = "DoodleJump";
@@ -9961,7 +9961,6 @@ var hud_text_HeightInfoMessageField = function(layer) {
 	this.set_selectable(false);
 	this.mouseEnabled = false;
 	this.set_autoSize(openfl_text_TextFieldAutoSize.fromString("center"));
-	this.set_text("Height: 0");
 };
 $hxClasses["hud.text.HeightInfoMessageField"] = hud_text_HeightInfoMessageField;
 hud_text_HeightInfoMessageField.__name__ = "hud.text.HeightInfoMessageField";
@@ -9977,12 +9976,11 @@ hud_text_HeightInfoMessageField.prototype = $extend(openfl_text_TextField.protot
 });
 var hud_text_StartMessageField = function() {
 	openfl_text_TextField.call(this);
-	var messageFormat = new openfl_text_TextFormat("Verdana",18,1644800,true);
+	var messageFormat = new openfl_text_TextFormat("Verdana",16,1644800,true);
 	messageFormat.align = 0;
-	this.set_width(150);
 	this.set_defaultTextFormat(messageFormat);
 	this.set_selectable(false);
-	this.set_text("Press SPACE");
+	this.set_text("Press SPACE or Tap(Click) Screen to start!");
 };
 $hxClasses["hud.text.StartMessageField"] = hud_text_StartMessageField;
 hud_text_StartMessageField.__name__ = "hud.text.StartMessageField";
@@ -10014,7 +10012,7 @@ items_Hero.prototype = $extend(items_GameItem.prototype,{
 	}
 	,update: function(deltaTime) {
 		this.currentDeltaTime = deltaTime;
-		if(this.realY + this.get_height() >= this.floor) {
+		if(this.realY + this.get_height() + 1 >= this.floor) {
 			this.die();
 		}
 		if(this.isJumping) {
@@ -10023,13 +10021,6 @@ items_Hero.prototype = $extend(items_GameItem.prototype,{
 			this.jump();
 		}
 		this.checkForThePositionChange();
-	}
-	,checkJump: function() {
-		if(this.realY + this.get_height() >= this.floor) {
-			this.stopJump();
-		} else {
-			this.updateJumpMovement();
-		}
 	}
 	,move: function(direction) {
 		if(this.active) {
@@ -29447,12 +29438,14 @@ $hxClasses["managers.HUDManager"] = managers_HUDManager;
 managers_HUDManager.__name__ = "managers.HUDManager";
 managers_HUDManager.prototype = {
 	initText: function() {
-		this.startMessageField = new hud_text_StartMessageField();
-		this.layer.addChild(this.startMessageField);
 		this.heightInfoMessageField = new hud_text_HeightInfoMessageField(this.layer);
 		this.heightInfoMessageField.set_width(this.stageWidth);
-		this.heightInfoMessageField.set_y(30);
+		this.heightInfoMessageField.set_y(40);
 		this.layer.addChild(this.heightInfoMessageField);
+		this.startMessageField = new hud_text_StartMessageField();
+		this.startMessageField.set_width(this.stageWidth);
+		this.startMessageField.set_y(40);
+		this.layer.addChild(this.startMessageField);
 	}
 	,hideInitText: function() {
 		if(this.startMessageField.get_visible()) {
@@ -29482,9 +29475,9 @@ managers_HeroManager.prototype = {
 			return;
 		}
 		var type = event.get_inputType();
-		if(type == managers_InputEventType.DIR_CHANGE) {
+		if(type == managers_meta_InputEventType.DIR_CHANGE) {
 			this.hero.move(event.get_xAxis());
-		} else if(type == managers_InputEventType.KEY_PRESS) {
+		} else if(type == managers_meta_InputEventType.KEY_PRESS) {
 			this.hero.activate();
 		}
 	}
@@ -29511,125 +29504,6 @@ managers_HeroManager.prototype = {
 	}
 	,__class__: managers_HeroManager
 };
-var managers_InputEventType = $hxEnums["managers.InputEventType"] = { __ename__:"managers.InputEventType",__constructs__:null
-	,DIR_CHANGE: {_hx_name:"DIR_CHANGE",_hx_index:0,__enum__:"managers.InputEventType",toString:$estr}
-	,KEY_PRESS: {_hx_name:"KEY_PRESS",_hx_index:1,__enum__:"managers.InputEventType",toString:$estr}
-};
-managers_InputEventType.__constructs__ = [managers_InputEventType.DIR_CHANGE,managers_InputEventType.KEY_PRESS];
-var openfl_events_Event = function(type,bubbles,cancelable) {
-	if(cancelable == null) {
-		cancelable = false;
-	}
-	if(bubbles == null) {
-		bubbles = false;
-	}
-	this.type = type;
-	this.bubbles = bubbles;
-	this.cancelable = cancelable;
-	this.eventPhase = 2;
-};
-$hxClasses["openfl.events.Event"] = openfl_events_Event;
-openfl_events_Event.__name__ = "openfl.events.Event";
-openfl_events_Event.prototype = {
-	clone: function() {
-		var event = new openfl_events_Event(this.type,this.bubbles,this.cancelable);
-		event.eventPhase = this.eventPhase;
-		event.target = this.target;
-		event.currentTarget = this.currentTarget;
-		return event;
-	}
-	,formatToString: function(className,p1,p2,p3,p4,p5) {
-		var parameters = [];
-		if(p1 != null) {
-			parameters.push(p1);
-		}
-		if(p2 != null) {
-			parameters.push(p2);
-		}
-		if(p3 != null) {
-			parameters.push(p3);
-		}
-		if(p4 != null) {
-			parameters.push(p4);
-		}
-		if(p5 != null) {
-			parameters.push(p5);
-		}
-		return $bind(this,this.__formatToString).apply(this,[className,parameters]);
-	}
-	,isDefaultPrevented: function() {
-		return this.__preventDefault;
-	}
-	,preventDefault: function() {
-		if(this.cancelable) {
-			this.__preventDefault = true;
-		}
-	}
-	,stopImmediatePropagation: function() {
-		this.__isCanceled = true;
-		this.__isCanceledNow = true;
-	}
-	,stopPropagation: function() {
-		this.__isCanceled = true;
-	}
-	,toString: function() {
-		return this.__formatToString("Event",["type","bubbles","cancelable"]);
-	}
-	,__formatToString: function(className,parameters) {
-		var output = "[" + className;
-		var arg = null;
-		var _g = 0;
-		while(_g < parameters.length) {
-			var param = parameters[_g];
-			++_g;
-			arg = Reflect.field(this,param);
-			if(typeof(arg) == "string") {
-				output += " " + param + "=\"" + Std.string(arg) + "\"";
-			} else {
-				output += " " + param + "=" + Std.string(arg);
-			}
-		}
-		output += "]";
-		return output;
-	}
-	,__init: function() {
-		this.target = null;
-		this.currentTarget = null;
-		this.bubbles = false;
-		this.cancelable = false;
-		this.eventPhase = 2;
-		this.__isCanceled = false;
-		this.__isCanceledNow = false;
-		this.__preventDefault = false;
-	}
-	,__class__: openfl_events_Event
-};
-var managers_InputEvent = function(direction,inputType,bubbles,cancelable) {
-	if(cancelable == null) {
-		cancelable = false;
-	}
-	if(bubbles == null) {
-		bubbles = true;
-	}
-	openfl_events_Event.call(this,"inputEvent",bubbles,cancelable);
-	this.xAxis = direction;
-	this.inputType = inputType;
-};
-$hxClasses["managers.InputEvent"] = managers_InputEvent;
-managers_InputEvent.__name__ = "managers.InputEvent";
-managers_InputEvent.__super__ = openfl_events_Event;
-managers_InputEvent.prototype = $extend(openfl_events_Event.prototype,{
-	get_xAxis: function() {
-		return this.xAxis;
-	}
-	,get_inputType: function() {
-		return this.inputType;
-	}
-	,clone: function() {
-		return new managers_InputEvent(this.xAxis,this.inputType,this.bubbles,this.cancelable);
-	}
-	,__class__: managers_InputEvent
-});
 var managers_InputManager = function(stage) {
 	this.stage = stage;
 	this.direction = 0;
@@ -29655,7 +29529,7 @@ managers_InputManager.prototype = {
 		} else if(event.keyCode == 39) {
 			this.direction = 1;
 		} else if(event.keyCode == 32) {
-			this.stage.dispatchEvent(new managers_InputEvent(0,managers_InputEventType.KEY_PRESS));
+			this.stage.dispatchEvent(new managers_meta_InputEvent(0,managers_meta_InputEventType.KEY_PRESS));
 		}
 	}
 	,onKeyUp: function(event) {
@@ -29667,7 +29541,7 @@ managers_InputManager.prototype = {
 		this.stage.addEventListener("mouseDown",$bind(this,this.onMouseDown));
 	}
 	,onMouseDown: function(event) {
-		this.stage.dispatchEvent(new managers_InputEvent(0,managers_InputEventType.KEY_PRESS));
+		this.stage.dispatchEvent(new managers_meta_InputEvent(0,managers_meta_InputEventType.KEY_PRESS));
 	}
 	,onMouseMove: function(event) {
 		var mouseX = event.stageX;
@@ -29687,7 +29561,7 @@ managers_InputManager.prototype = {
 				finalDirection = -1;
 			}
 		}
-		this.stage.dispatchEvent(new managers_InputEvent(finalDirection,managers_InputEventType.DIR_CHANGE));
+		this.stage.dispatchEvent(new managers_meta_InputEvent(finalDirection,managers_meta_InputEventType.DIR_CHANGE));
 	}
 	,__class__: managers_InputManager
 };
@@ -29991,6 +29865,125 @@ managers_SpawnManager.prototype = {
 	}
 	,__class__: managers_SpawnManager
 };
+var managers_meta_InputEventType = $hxEnums["managers.meta.InputEventType"] = { __ename__:"managers.meta.InputEventType",__constructs__:null
+	,DIR_CHANGE: {_hx_name:"DIR_CHANGE",_hx_index:0,__enum__:"managers.meta.InputEventType",toString:$estr}
+	,KEY_PRESS: {_hx_name:"KEY_PRESS",_hx_index:1,__enum__:"managers.meta.InputEventType",toString:$estr}
+};
+managers_meta_InputEventType.__constructs__ = [managers_meta_InputEventType.DIR_CHANGE,managers_meta_InputEventType.KEY_PRESS];
+var openfl_events_Event = function(type,bubbles,cancelable) {
+	if(cancelable == null) {
+		cancelable = false;
+	}
+	if(bubbles == null) {
+		bubbles = false;
+	}
+	this.type = type;
+	this.bubbles = bubbles;
+	this.cancelable = cancelable;
+	this.eventPhase = 2;
+};
+$hxClasses["openfl.events.Event"] = openfl_events_Event;
+openfl_events_Event.__name__ = "openfl.events.Event";
+openfl_events_Event.prototype = {
+	clone: function() {
+		var event = new openfl_events_Event(this.type,this.bubbles,this.cancelable);
+		event.eventPhase = this.eventPhase;
+		event.target = this.target;
+		event.currentTarget = this.currentTarget;
+		return event;
+	}
+	,formatToString: function(className,p1,p2,p3,p4,p5) {
+		var parameters = [];
+		if(p1 != null) {
+			parameters.push(p1);
+		}
+		if(p2 != null) {
+			parameters.push(p2);
+		}
+		if(p3 != null) {
+			parameters.push(p3);
+		}
+		if(p4 != null) {
+			parameters.push(p4);
+		}
+		if(p5 != null) {
+			parameters.push(p5);
+		}
+		return $bind(this,this.__formatToString).apply(this,[className,parameters]);
+	}
+	,isDefaultPrevented: function() {
+		return this.__preventDefault;
+	}
+	,preventDefault: function() {
+		if(this.cancelable) {
+			this.__preventDefault = true;
+		}
+	}
+	,stopImmediatePropagation: function() {
+		this.__isCanceled = true;
+		this.__isCanceledNow = true;
+	}
+	,stopPropagation: function() {
+		this.__isCanceled = true;
+	}
+	,toString: function() {
+		return this.__formatToString("Event",["type","bubbles","cancelable"]);
+	}
+	,__formatToString: function(className,parameters) {
+		var output = "[" + className;
+		var arg = null;
+		var _g = 0;
+		while(_g < parameters.length) {
+			var param = parameters[_g];
+			++_g;
+			arg = Reflect.field(this,param);
+			if(typeof(arg) == "string") {
+				output += " " + param + "=\"" + Std.string(arg) + "\"";
+			} else {
+				output += " " + param + "=" + Std.string(arg);
+			}
+		}
+		output += "]";
+		return output;
+	}
+	,__init: function() {
+		this.target = null;
+		this.currentTarget = null;
+		this.bubbles = false;
+		this.cancelable = false;
+		this.eventPhase = 2;
+		this.__isCanceled = false;
+		this.__isCanceledNow = false;
+		this.__preventDefault = false;
+	}
+	,__class__: openfl_events_Event
+};
+var managers_meta_InputEvent = function(direction,inputType,bubbles,cancelable) {
+	if(cancelable == null) {
+		cancelable = false;
+	}
+	if(bubbles == null) {
+		bubbles = true;
+	}
+	openfl_events_Event.call(this,"inputEvent",bubbles,cancelable);
+	this.xAxis = direction;
+	this.inputType = inputType;
+};
+$hxClasses["managers.meta.InputEvent"] = managers_meta_InputEvent;
+managers_meta_InputEvent.__name__ = "managers.meta.InputEvent";
+managers_meta_InputEvent.__super__ = openfl_events_Event;
+managers_meta_InputEvent.prototype = $extend(openfl_events_Event.prototype,{
+	get_xAxis: function() {
+		return this.xAxis;
+	}
+	,get_inputType: function() {
+		return this.inputType;
+	}
+	,clone: function() {
+		return new managers_meta_InputEvent(this.xAxis,this.inputType,this.bubbles,this.cancelable);
+	}
+	,__class__: managers_meta_InputEvent
+});
 var openfl_utils_Dictionary = {};
 openfl_utils_Dictionary.exists = function(this1,key) {
 	return this1.exists(key);
@@ -80368,6 +80361,13 @@ managers_CollisionManager.HERO_COLLISION_PERCENTAGE = 0.85;
 managers_CollisionManager.PLATFORM_COLLISION_PERCENTAGE = 0.25;
 managers_DifficultyManager.HEIGHT_DIVIDER = 10;
 managers_DifficultyManager.DIFFICULTY_MULTIPLIER = 10;
+managers_InputManager.ACCEL_THRESHOLD = 0.2;
+managers_InputManager.UPDATE_INTERVAL = 33;
+managers_PlatformManager.MAX_NUMBER_OF_PLATFORMS = 30;
+managers_PlatformManager.FLOOR_OFFSET = 165;
+managers_PlatformManager.SOON_VISIBLE_OFFSET = 30;
+managers_PlatformManager.MINI_PLATFORM_VER_DISTANCE = 25;
+managers_PlatformManager.MAX_PLATFORM_VER_DISTANCE = 100;
 openfl_events_Event.ACTIVATE = "activate";
 openfl_events_Event.ADDED = "added";
 openfl_events_Event.ADDED_TO_STAGE = "addedToStage";
@@ -80406,14 +80406,7 @@ openfl_events_Event.TAB_ENABLED_CHANGE = "tabEnabledChange";
 openfl_events_Event.TAB_INDEX_CHANGE = "tabIndexChange";
 openfl_events_Event.TEXTURE_READY = "textureReady";
 openfl_events_Event.UNLOAD = "unload";
-managers_InputEvent.NAME = "inputEvent";
-managers_InputManager.ACCEL_THRESHOLD = 0.2;
-managers_InputManager.UPDATE_INTERVAL = 33;
-managers_PlatformManager.MAX_NUMBER_OF_PLATFORMS = 30;
-managers_PlatformManager.FLOOR_OFFSET = 165;
-managers_PlatformManager.SOON_VISIBLE_OFFSET = 30;
-managers_PlatformManager.MINI_PLATFORM_VER_DISTANCE = 25;
-managers_PlatformManager.MAX_PLATFORM_VER_DISTANCE = 100;
+managers_meta_InputEvent.NAME = "inputEvent";
 openfl_utils__$Dictionary_UtilsObjectMap.__meta__ = { obj : { SuppressWarnings : ["checkstyle:FieldDocComment"]}};
 openfl_Lib.__lastTimerID = 0;
 openfl_Lib.__sentWarnings = new haxe_ds_StringMap();

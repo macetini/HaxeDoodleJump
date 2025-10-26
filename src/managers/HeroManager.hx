@@ -1,7 +1,6 @@
 package managers;
 
-import managers.InputManager.InputEventType;
-import managers.InputManager.InputEvent;
+import managers.meta.InputEvent;
 import items.Hero;
 import openfl.display.Sprite;
 

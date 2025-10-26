@@ -1,7 +1,6 @@
 package items;
 
 import flash.events.Event;
-import flash.ui.Keyboard;
 
 /**
 	Hero class represents the player character in the Doodle Jump game.
@@ -67,26 +66,17 @@ class Hero extends GameItem {
 	override public function update(deltaTime:Float) {
 		currentDeltaTime = deltaTime;
 
-		if (realY + this.height >= floor) {
+		if (realY + this.height + 1 >= floor) {
 			die();
 		}
 
 		if (isJumping) {
-			// checkJump();
 			updateJumpMovement();
 		} else if (active) {
 			jump();
 		}
 
 		checkForThePositionChange();
-	}
-
-	function checkJump() {
-		if (realY + this.height >= floor) {
-			stopJump();
-		} else {
-			updateJumpMovement();
-		}
 	}
 
 	/**
