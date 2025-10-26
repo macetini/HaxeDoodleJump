@@ -1,5 +1,7 @@
 package managers;
 
+import managers.InputManager.KeyEventType;
+import managers.InputManager.KeyEvent;
 import items.Hero;
 import openfl.display.Sprite;
 
@@ -15,7 +17,7 @@ class HeroManager {
 	var stageHeight:Float;
 	var stageWidth:Float;
 	var layer:Sprite;
-	var previusYPositon:Float;
+	var previusYPosition:Float;
 
 	/**
 		The hero object that is managed by this HeroManager.
@@ -34,6 +36,21 @@ class HeroManager {
 
 		stageHeight = layer.stage.stageHeight;
 		stageWidth = layer.stage.stageWidth;
+
+		layer.stage.addEventListener(KeyEvent.EVENT, onInputEvent);
+	}
+
+	function onInputEvent(event:KeyEvent) {
+		if (hero == null) {
+			return;
+		}
+
+		if (event.get_eventType() == KeyEventType.UP) {
+			hero.onKeyUp(event.get_keyCode());
+		}
+		else if (event.get_eventType() == KeyEventType.DOWN) {
+			hero.onKeyDown(event.get_keyCode());
+		}
 	}
 
 	/**
@@ -46,7 +63,7 @@ class HeroManager {
 		}
 
 		horizontalChange = 0.0;
-		previusYPositon = layer.stage.stageHeight - 100; // Initial position at the bottom of the stage
+		previusYPosition = layer.stage.stageHeight - 100; // Initial position at the bottom of the stage
 
 		createHero();
 	}
@@ -60,7 +77,7 @@ class HeroManager {
 
 		layer.addChild(hero);
 
-		previusYPositon = layer.stage.stageHeight - hero.height;
+		previusYPosition = layer.stage.stageHeight - hero.height;
 	}
 
 	/**
@@ -68,8 +85,8 @@ class HeroManager {
 		@return Float
 	**/
 	public function updateHorizontalChange():Float {
-		horizontalChange = previusYPositon - hero.realY;
-		previusYPositon = hero.realY;
+		horizontalChange = previusYPosition - hero.realY;
+		previusYPosition = hero.realY;
 
 		return horizontalChange;
 	}

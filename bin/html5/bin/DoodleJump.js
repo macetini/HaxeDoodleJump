@@ -892,7 +892,7 @@ ApplicationMain.main = function() {
 ApplicationMain.create = function(config) {
 	var app = new openfl_display_Application();
 	ManifestResources.init(config);
-	app.meta.h["build"] = "16";
+	app.meta.h["build"] = "22";
 	app.meta.h["company"] = "Marko Cettina";
 	app.meta.h["file"] = "DoodleJump";
 	app.meta.h["name"] = "DoodleJump";
@@ -3709,6 +3709,7 @@ Main.prototype = $extend(items_GameItem.prototype,{
 		this.platformManager = new managers_PlatformManager(this.platformsLayer);
 		this.spawnManager = new managers_SpawnManager(this.spawnsLayer);
 		this.heroManager = new managers_HeroManager(this.heroLayer);
+		this.inputManager = new managers_InputManager(this.stage);
 		this.hudManager = new managers_HUDManager(this.hudLayer);
 		this.collisionManager = new managers_CollisionManager();
 		this.difficultyManager = new managers_DifficultyManager();
@@ -3720,6 +3721,7 @@ Main.prototype = $extend(items_GameItem.prototype,{
 		this.heroManager.addHero();
 	}
 	,update: function(deltaTime) {
+		items_GameItem.prototype.update.call(this,deltaTime);
 		this.recycleExpiredItems();
 		this.generateSpawn(deltaTime);
 		this.checkCollision();
@@ -9989,7 +9991,7 @@ var items_Hero = function() {
 	this.keys = [];
 	this.horizontalVelocity = 6;
 	this.verticalPull = 1;
-	this.initalJumpPower = 65;
+	this.initialJumpPower = 65;
 	this.currentJumpPower = 0;
 	this.isJumping = false;
 	this.isSuperJumpPending = false;
@@ -10005,14 +10007,12 @@ items_Hero.prototype = $extend(items_GameItem.prototype,{
 		items_GameItem.prototype.addedToStage.call(this,event);
 		this.floor = this.stage.stageHeight;
 		this.realY = this.get_y();
-		this.stage.addEventListener("keyDown",$bind(this,this.onKeyDown));
-		this.stage.addEventListener("keyUp",$bind(this,this.onKeyUp));
 	}
-	,onKeyDown: function(evt) {
-		this.keys[evt.keyCode] = true;
+	,onKeyDown: function(keyCode) {
+		this.keys[keyCode] = true;
 	}
-	,onKeyUp: function(evt) {
-		this.keys[evt.keyCode] = false;
+	,onKeyUp: function(keyCode) {
+		this.keys[keyCode] = false;
 	}
 	,update: function(deltaTime) {
 		this.currentDeltaTime = deltaTime;
@@ -10037,10 +10037,10 @@ items_Hero.prototype = $extend(items_GameItem.prototype,{
 	}
 	,startJump: function() {
 		if(this.isSuperJumpPending) {
-			var lhs = this.initalJumpPower;
+			var lhs = this.initialJumpPower;
 			this.currentJumpPower = UInt.toFloat(3) * lhs;
 		} else {
-			this.currentJumpPower = this.initalJumpPower;
+			this.currentJumpPower = this.initialJumpPower;
 		}
 		this.isSuperJumpPending = false;
 		this.realY = this.get_y();
@@ -27073,7 +27073,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 222871;
+	this.version = 770742;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
@@ -29469,16 +29469,27 @@ var managers_HeroManager = function(layer) {
 	this.layer = layer;
 	this.stageHeight = layer.stage.stageHeight;
 	this.stageWidth = layer.stage.stageWidth;
+	layer.stage.addEventListener("keyEvent",$bind(this,this.onInputEvent));
 };
 $hxClasses["managers.HeroManager"] = managers_HeroManager;
 managers_HeroManager.__name__ = "managers.HeroManager";
 managers_HeroManager.prototype = {
-	addHero: function() {
+	onInputEvent: function(event) {
+		if(this.hero == null) {
+			return;
+		}
+		if(event.get_eventType() == 0) {
+			this.hero.onKeyUp(event.get_keyCode());
+		} else if(event.get_eventType() == 1) {
+			this.hero.onKeyDown(event.get_keyCode());
+		}
+	}
+	,addHero: function() {
 		if(this.hero != null) {
 			return;
 		}
 		this.horizontalChange = 0.0;
-		this.previusYPositon = this.layer.stage.stageHeight - 100;
+		this.previusYPosition = this.layer.stage.stageHeight - 100;
 		this.createHero();
 	}
 	,createHero: function() {
@@ -29487,14 +29498,174 @@ managers_HeroManager.prototype = {
 		this.hero.set_x(this.layer.stage.stageWidth / value - this.hero.get_width() / value);
 		this.hero.set_y(this.layer.stage.stageHeight - this.hero.get_height());
 		this.layer.addChild(this.hero);
-		this.previusYPositon = this.layer.stage.stageHeight - this.hero.get_height();
+		this.previusYPosition = this.layer.stage.stageHeight - this.hero.get_height();
 	}
 	,updateHorizontalChange: function() {
-		this.horizontalChange = this.previusYPositon - this.hero.realY;
-		this.previusYPositon = this.hero.realY;
+		this.horizontalChange = this.previusYPosition - this.hero.realY;
+		this.previusYPosition = this.hero.realY;
 		return this.horizontalChange;
 	}
 	,__class__: managers_HeroManager
+};
+var openfl_events_Event = function(type,bubbles,cancelable) {
+	if(cancelable == null) {
+		cancelable = false;
+	}
+	if(bubbles == null) {
+		bubbles = false;
+	}
+	this.type = type;
+	this.bubbles = bubbles;
+	this.cancelable = cancelable;
+	this.eventPhase = 2;
+};
+$hxClasses["openfl.events.Event"] = openfl_events_Event;
+openfl_events_Event.__name__ = "openfl.events.Event";
+openfl_events_Event.prototype = {
+	clone: function() {
+		var event = new openfl_events_Event(this.type,this.bubbles,this.cancelable);
+		event.eventPhase = this.eventPhase;
+		event.target = this.target;
+		event.currentTarget = this.currentTarget;
+		return event;
+	}
+	,formatToString: function(className,p1,p2,p3,p4,p5) {
+		var parameters = [];
+		if(p1 != null) {
+			parameters.push(p1);
+		}
+		if(p2 != null) {
+			parameters.push(p2);
+		}
+		if(p3 != null) {
+			parameters.push(p3);
+		}
+		if(p4 != null) {
+			parameters.push(p4);
+		}
+		if(p5 != null) {
+			parameters.push(p5);
+		}
+		return $bind(this,this.__formatToString).apply(this,[className,parameters]);
+	}
+	,isDefaultPrevented: function() {
+		return this.__preventDefault;
+	}
+	,preventDefault: function() {
+		if(this.cancelable) {
+			this.__preventDefault = true;
+		}
+	}
+	,stopImmediatePropagation: function() {
+		this.__isCanceled = true;
+		this.__isCanceledNow = true;
+	}
+	,stopPropagation: function() {
+		this.__isCanceled = true;
+	}
+	,toString: function() {
+		return this.__formatToString("Event",["type","bubbles","cancelable"]);
+	}
+	,__formatToString: function(className,parameters) {
+		var output = "[" + className;
+		var arg = null;
+		var _g = 0;
+		while(_g < parameters.length) {
+			var param = parameters[_g];
+			++_g;
+			arg = Reflect.field(this,param);
+			if(typeof(arg) == "string") {
+				output += " " + param + "=\"" + Std.string(arg) + "\"";
+			} else {
+				output += " " + param + "=" + Std.string(arg);
+			}
+		}
+		output += "]";
+		return output;
+	}
+	,__init: function() {
+		this.target = null;
+		this.currentTarget = null;
+		this.bubbles = false;
+		this.cancelable = false;
+		this.eventPhase = 2;
+		this.__isCanceled = false;
+		this.__isCanceledNow = false;
+		this.__preventDefault = false;
+	}
+	,__class__: openfl_events_Event
+};
+var managers_KeyEvent = function(keyCode,eventType,bubbles,cancelable) {
+	if(cancelable == null) {
+		cancelable = false;
+	}
+	if(bubbles == null) {
+		bubbles = true;
+	}
+	openfl_events_Event.call(this,"keyEvent",bubbles,cancelable);
+	this.keyCode = keyCode;
+	this.eventType = eventType;
+};
+$hxClasses["managers.KeyEvent"] = managers_KeyEvent;
+managers_KeyEvent.__name__ = "managers.KeyEvent";
+managers_KeyEvent.__super__ = openfl_events_Event;
+managers_KeyEvent.prototype = $extend(openfl_events_Event.prototype,{
+	get_keyCode: function() {
+		return this.keyCode;
+	}
+	,get_eventType: function() {
+		return this.eventType;
+	}
+	,clone: function() {
+		return new managers_KeyEvent(this.keyCode,this.eventType,this.bubbles,this.cancelable);
+	}
+	,__class__: managers_KeyEvent
+});
+var managers_InputManager = function(stage) {
+	this.stage = stage;
+	this.mouseButtonsDown = new haxe_ds_IntMap();
+	this.mouseButtonsJustPressed = new haxe_ds_IntMap();
+	this.mouseButtonsWasDown = new haxe_ds_IntMap();
+	this.setupKeyboardEvents();
+	this.setupMouseEvents();
+	if(openfl_sensors_Accelerometer.get_isSupported()) {
+		this.accelerometer = new openfl_sensors_Accelerometer();
+		this.accelerometer.addEventListener("update",$bind(this,this.onAccelerometerUpdate));
+		this.accelerometer.setRequestedUpdateInterval(33);
+	}
+};
+$hxClasses["managers.InputManager"] = managers_InputManager;
+managers_InputManager.__name__ = "managers.InputManager";
+managers_InputManager.prototype = {
+	setupKeyboardEvents: function() {
+		this.stage.addEventListener("keyDown",$bind(this,this.onKeyDown));
+		this.stage.addEventListener("keyUp",$bind(this,this.onKeyUp));
+	}
+	,onKeyDown: function(event) {
+		this.stage.dispatchEvent(new managers_KeyEvent(event.keyCode,1));
+	}
+	,onKeyUp: function(event) {
+		this.stage.dispatchEvent(new managers_KeyEvent(event.keyCode,0));
+	}
+	,setupMouseEvents: function() {
+		this.stage.addEventListener("mouseDown",$bind(this,this.onMouseDown));
+		this.stage.addEventListener("mouseUp",$bind(this,this.onMouseUp));
+		this.stage.addEventListener("mouseMove",$bind(this,this.onMouseMove));
+	}
+	,onMouseDown: function(event) {
+	}
+	,onMouseUp: function(event) {
+	}
+	,onMouseMove: function(event) {
+		this.mouseX = event.stageX;
+		this.mouseY = event.stageY;
+	}
+	,onAccelerometerUpdate: function(event) {
+		this.accelerationX = event.accelerationY;
+		this.accelerationY = event.accelerationX;
+		this.accelerationZ = event.accelerationZ;
+	}
+	,__class__: managers_InputManager
 };
 var managers_PlatformManager = function(layer) {
 	this.layer = layer;
@@ -67348,94 +67519,54 @@ openfl_errors_TypeError.__super__ = openfl_errors_Error;
 openfl_errors_TypeError.prototype = $extend(openfl_errors_Error.prototype,{
 	__class__: openfl_errors_TypeError
 });
-var openfl_events_Event = function(type,bubbles,cancelable) {
+var openfl_events_AccelerometerEvent = function(type,bubbles,cancelable,timestamp,accelerationX,accelerationY,accelerationZ) {
+	if(accelerationZ == null) {
+		accelerationZ = 0;
+	}
+	if(accelerationY == null) {
+		accelerationY = 0;
+	}
+	if(accelerationX == null) {
+		accelerationX = 0;
+	}
+	if(timestamp == null) {
+		timestamp = 0;
+	}
 	if(cancelable == null) {
 		cancelable = false;
 	}
 	if(bubbles == null) {
 		bubbles = false;
 	}
-	this.type = type;
-	this.bubbles = bubbles;
-	this.cancelable = cancelable;
-	this.eventPhase = 2;
+	openfl_events_Event.call(this,type,bubbles,cancelable);
+	this.timestamp = timestamp;
+	this.accelerationX = accelerationX;
+	this.accelerationY = accelerationY;
+	this.accelerationZ = accelerationZ;
 };
-$hxClasses["openfl.events.Event"] = openfl_events_Event;
-openfl_events_Event.__name__ = "openfl.events.Event";
-openfl_events_Event.prototype = {
+$hxClasses["openfl.events.AccelerometerEvent"] = openfl_events_AccelerometerEvent;
+openfl_events_AccelerometerEvent.__name__ = "openfl.events.AccelerometerEvent";
+openfl_events_AccelerometerEvent.__super__ = openfl_events_Event;
+openfl_events_AccelerometerEvent.prototype = $extend(openfl_events_Event.prototype,{
 	clone: function() {
-		var event = new openfl_events_Event(this.type,this.bubbles,this.cancelable);
-		event.eventPhase = this.eventPhase;
+		var event = new openfl_events_AccelerometerEvent(this.type,this.bubbles,this.cancelable,this.timestamp,this.accelerationX,this.accelerationY,this.accelerationZ);
 		event.target = this.target;
 		event.currentTarget = this.currentTarget;
+		event.eventPhase = this.eventPhase;
 		return event;
 	}
-	,formatToString: function(className,p1,p2,p3,p4,p5) {
-		var parameters = [];
-		if(p1 != null) {
-			parameters.push(p1);
-		}
-		if(p2 != null) {
-			parameters.push(p2);
-		}
-		if(p3 != null) {
-			parameters.push(p3);
-		}
-		if(p4 != null) {
-			parameters.push(p4);
-		}
-		if(p5 != null) {
-			parameters.push(p5);
-		}
-		return $bind(this,this.__formatToString).apply(this,[className,parameters]);
-	}
-	,isDefaultPrevented: function() {
-		return this.__preventDefault;
-	}
-	,preventDefault: function() {
-		if(this.cancelable) {
-			this.__preventDefault = true;
-		}
-	}
-	,stopImmediatePropagation: function() {
-		this.__isCanceled = true;
-		this.__isCanceledNow = true;
-	}
-	,stopPropagation: function() {
-		this.__isCanceled = true;
-	}
 	,toString: function() {
-		return this.__formatToString("Event",["type","bubbles","cancelable"]);
-	}
-	,__formatToString: function(className,parameters) {
-		var output = "[" + className;
-		var arg = null;
-		var _g = 0;
-		while(_g < parameters.length) {
-			var param = parameters[_g];
-			++_g;
-			arg = Reflect.field(this,param);
-			if(typeof(arg) == "string") {
-				output += " " + param + "=\"" + Std.string(arg) + "\"";
-			} else {
-				output += " " + param + "=" + Std.string(arg);
-			}
-		}
-		output += "]";
-		return output;
+		return this.__formatToString("AccelerometerEvent",["type","bubbles","cancelable","timestamp","accelerationX","accelerationY","accelerationZ"]);
 	}
 	,__init: function() {
-		this.target = null;
-		this.currentTarget = null;
-		this.bubbles = false;
-		this.cancelable = false;
-		this.eventPhase = 2;
-		this.__isCanceled = false;
-		this.__isCanceledNow = false;
-		this.__preventDefault = false;
+		openfl_events_Event.prototype.__init.call(this);
+		this.timestamp = 0;
+		this.accelerationX = 0;
+		this.accelerationY = 0;
+		this.accelerationZ = 0;
 	}
-	,__class__: openfl_events_Event
-};
+	,__class__: openfl_events_AccelerometerEvent
+});
 var openfl_events_ActivityEvent = function(type,bubbles,cancelable,activating) {
 	if(activating == null) {
 		activating = false;
@@ -70705,6 +70836,85 @@ openfl_net_URLVariables.__get = function(this1,key) {
 openfl_net_URLVariables.__set = function(this1,key,value) {
 	this1[key] = value;
 };
+var openfl_sensors_Accelerometer = function() {
+	openfl_events_EventDispatcher.call(this);
+	openfl_sensors_Accelerometer.initialize();
+	this.__interval = 0;
+	this.__muted = false;
+	this.setRequestedUpdateInterval(openfl_sensors_Accelerometer.defaultInterval);
+};
+$hxClasses["openfl.sensors.Accelerometer"] = openfl_sensors_Accelerometer;
+openfl_sensors_Accelerometer.__name__ = "openfl.sensors.Accelerometer";
+openfl_sensors_Accelerometer.__properties__ = {get_isSupported:"get_isSupported"};
+openfl_sensors_Accelerometer.initialize = function() {
+	if(!openfl_sensors_Accelerometer.initialized) {
+		var sensors = lime_system_Sensor.getSensors(lime_system_SensorType.ACCELEROMETER);
+		if(sensors.length > 0) {
+			sensors[0].onUpdate.add(openfl_sensors_Accelerometer.accelerometer_onUpdate);
+			openfl_sensors_Accelerometer.supported = true;
+		}
+		openfl_sensors_Accelerometer.initialized = true;
+	}
+};
+openfl_sensors_Accelerometer.accelerometer_onUpdate = function(x,y,z) {
+	openfl_sensors_Accelerometer.currentX = x;
+	openfl_sensors_Accelerometer.currentY = y;
+	openfl_sensors_Accelerometer.currentZ = z;
+};
+openfl_sensors_Accelerometer.get_isSupported = function() {
+	openfl_sensors_Accelerometer.initialize();
+	return openfl_sensors_Accelerometer.supported;
+};
+openfl_sensors_Accelerometer.__super__ = openfl_events_EventDispatcher;
+openfl_sensors_Accelerometer.prototype = $extend(openfl_events_EventDispatcher.prototype,{
+	addEventListener: function(type,listener,useCapture,priority,useWeakReference) {
+		if(useWeakReference == null) {
+			useWeakReference = false;
+		}
+		if(priority == null) {
+			priority = 0;
+		}
+		if(useCapture == null) {
+			useCapture = false;
+		}
+		openfl_events_EventDispatcher.prototype.addEventListener.call(this,type,listener,useCapture,priority,useWeakReference);
+		this.update();
+	}
+	,setRequestedUpdateInterval: function(interval) {
+		this.__interval = interval;
+		if(this.__interval < 0) {
+			throw new openfl_errors_ArgumentError();
+		} else if(this.__interval == 0) {
+			this.__interval = openfl_sensors_Accelerometer.defaultInterval;
+		}
+		if(this.__timer != null) {
+			this.__timer.stop();
+			this.__timer = null;
+		}
+		if(openfl_sensors_Accelerometer.supported && !this.get_muted()) {
+			this.__timer = new haxe_Timer(this.__interval);
+			this.__timer.run = $bind(this,this.update);
+		}
+	}
+	,update: function() {
+		var event = new openfl_events_AccelerometerEvent("update");
+		event.timestamp = new Date().getTime() / 1000;
+		event.accelerationX = openfl_sensors_Accelerometer.currentX;
+		event.accelerationY = openfl_sensors_Accelerometer.currentY;
+		event.accelerationZ = openfl_sensors_Accelerometer.currentZ;
+		this.dispatchEvent(event);
+	}
+	,get_muted: function() {
+		return this.__muted;
+	}
+	,set_muted: function(value) {
+		this.__muted = value;
+		this.setRequestedUpdateInterval(this.__interval);
+		return value;
+	}
+	,__class__: openfl_sensors_Accelerometer
+	,__properties__: {set_muted:"set_muted",get_muted:"get_muted"}
+});
 var openfl_system_ApplicationDomain = function(parentDomain) {
 	if(parentDomain != null) {
 		this.parentDomain = parentDomain;
@@ -78767,7 +78977,7 @@ openfl_text_TextField.__missingFontWarning = new haxe_ds_StringMap();
 items_Hero.RADIUS = 30;
 items_Hero.COLOR = 65280;
 items_Hero.JUMP_BORDER = 150;
-items_Hero.POWER_JUMP_MULTIPLYER = 3;
+items_Hero.POWER_JUMP_MULTIPLAYER = 3;
 items_Platform.HEIGHT = 20;
 items_Platform.WIDTH = 100;
 items_Platform.NORMAL_COLOR = 65535;
@@ -80134,6 +80344,45 @@ managers_CollisionManager.HERO_COLLISION_PERCENTAGE = 0.85;
 managers_CollisionManager.PLATFORM_COLLISION_PERCENTAGE = 0.25;
 managers_DifficultyManager.HEIGHT_DIVIDER = 10;
 managers_DifficultyManager.DIFFICULITY_MULTIPLYER = 10;
+openfl_events_Event.ACTIVATE = "activate";
+openfl_events_Event.ADDED = "added";
+openfl_events_Event.ADDED_TO_STAGE = "addedToStage";
+openfl_events_Event.CANCEL = "cancel";
+openfl_events_Event.CHANGE = "change";
+openfl_events_Event.CLEAR = "clear";
+openfl_events_Event.CLOSING = "closing";
+openfl_events_Event.CLOSE = "close";
+openfl_events_Event.COMPLETE = "complete";
+openfl_events_Event.CONNECT = "connect";
+openfl_events_Event.CONTEXT3D_CREATE = "context3DCreate";
+openfl_events_Event.COPY = "copy";
+openfl_events_Event.CUT = "cut";
+openfl_events_Event.DEACTIVATE = "deactivate";
+openfl_events_Event.ENTER_FRAME = "enterFrame";
+openfl_events_Event.EXIT_FRAME = "exitFrame";
+openfl_events_Event.EXITING = "exiting";
+openfl_events_Event.FRAME_CONSTRUCTED = "frameConstructed";
+openfl_events_Event.FRAME_LABEL = "frameLabel";
+openfl_events_Event.FULLSCREEN = "fullScreen";
+openfl_events_Event.ID3 = "id3";
+openfl_events_Event.INIT = "init";
+openfl_events_Event.MOUSE_LEAVE = "mouseLeave";
+openfl_events_Event.OPEN = "open";
+openfl_events_Event.PASTE = "paste";
+openfl_events_Event.REMOVED = "removed";
+openfl_events_Event.REMOVED_FROM_STAGE = "removedFromStage";
+openfl_events_Event.RENDER = "render";
+openfl_events_Event.RESIZE = "resize";
+openfl_events_Event.SCROLL = "scroll";
+openfl_events_Event.SELECT = "select";
+openfl_events_Event.SELECT_ALL = "selectAll";
+openfl_events_Event.SOUND_COMPLETE = "soundComplete";
+openfl_events_Event.TAB_CHILDREN_CHANGE = "tabChildrenChange";
+openfl_events_Event.TAB_ENABLED_CHANGE = "tabEnabledChange";
+openfl_events_Event.TAB_INDEX_CHANGE = "tabIndexChange";
+openfl_events_Event.TEXTURE_READY = "textureReady";
+openfl_events_Event.UNLOAD = "unload";
+managers_KeyEvent.EVENT = "keyEvent";
 managers_PlatformManager.MAX_NUMBER_OF_PLATFORMS = 30;
 managers_PlatformManager.FLOOR_OFFSET = 165;
 managers_PlatformManager.SOON_VISIBLE_OFFSET = 30;
@@ -80433,44 +80682,7 @@ openfl_display3D__$internal_Context3DState.__meta__ = { obj : { SuppressWarnings
 openfl_display3D_textures_TextureBase.__meta__ = { fields : { __textureContext : { SuppressWarnings : ["checkstyle:Dynamic"]}, __getGLFramebuffer : { SuppressWarnings : ["checkstyle:Dynamic"]}}};
 openfl_display3D_textures_Texture.__lowMemoryMode = false;
 openfl_errors_Error.DEFAULT_TO_STRING = "Error";
-openfl_events_Event.ACTIVATE = "activate";
-openfl_events_Event.ADDED = "added";
-openfl_events_Event.ADDED_TO_STAGE = "addedToStage";
-openfl_events_Event.CANCEL = "cancel";
-openfl_events_Event.CHANGE = "change";
-openfl_events_Event.CLEAR = "clear";
-openfl_events_Event.CLOSING = "closing";
-openfl_events_Event.CLOSE = "close";
-openfl_events_Event.COMPLETE = "complete";
-openfl_events_Event.CONNECT = "connect";
-openfl_events_Event.CONTEXT3D_CREATE = "context3DCreate";
-openfl_events_Event.COPY = "copy";
-openfl_events_Event.CUT = "cut";
-openfl_events_Event.DEACTIVATE = "deactivate";
-openfl_events_Event.ENTER_FRAME = "enterFrame";
-openfl_events_Event.EXIT_FRAME = "exitFrame";
-openfl_events_Event.EXITING = "exiting";
-openfl_events_Event.FRAME_CONSTRUCTED = "frameConstructed";
-openfl_events_Event.FRAME_LABEL = "frameLabel";
-openfl_events_Event.FULLSCREEN = "fullScreen";
-openfl_events_Event.ID3 = "id3";
-openfl_events_Event.INIT = "init";
-openfl_events_Event.MOUSE_LEAVE = "mouseLeave";
-openfl_events_Event.OPEN = "open";
-openfl_events_Event.PASTE = "paste";
-openfl_events_Event.REMOVED = "removed";
-openfl_events_Event.REMOVED_FROM_STAGE = "removedFromStage";
-openfl_events_Event.RENDER = "render";
-openfl_events_Event.RESIZE = "resize";
-openfl_events_Event.SCROLL = "scroll";
-openfl_events_Event.SELECT = "select";
-openfl_events_Event.SELECT_ALL = "selectAll";
-openfl_events_Event.SOUND_COMPLETE = "soundComplete";
-openfl_events_Event.TAB_CHILDREN_CHANGE = "tabChildrenChange";
-openfl_events_Event.TAB_ENABLED_CHANGE = "tabEnabledChange";
-openfl_events_Event.TAB_INDEX_CHANGE = "tabIndexChange";
-openfl_events_Event.TEXTURE_READY = "textureReady";
-openfl_events_Event.UNLOAD = "unload";
+openfl_events_AccelerometerEvent.UPDATE = "update";
 openfl_events_ActivityEvent.ACTIVITY = "activity";
 openfl_events_TextEvent.LINK = "link";
 openfl_events_TextEvent.TEXT_INPUT = "textInput";
@@ -80558,6 +80770,12 @@ openfl_net_URLRequestDefaults.followRedirects = true;
 openfl_net_URLRequestDefaults.idleTimeout = 0;
 openfl_net_URLRequestDefaults.manageCookies = true;
 openfl_net_URLVariables.__meta__ = { statics : { __get : { SuppressWarnings : ["checkstyle:FieldDocComment"]}, __set : { SuppressWarnings : ["checkstyle:FieldDocComment"]}}};
+openfl_sensors_Accelerometer.currentX = 0.0;
+openfl_sensors_Accelerometer.currentY = 1.0;
+openfl_sensors_Accelerometer.currentZ = 0.0;
+openfl_sensors_Accelerometer.defaultInterval = 34;
+openfl_sensors_Accelerometer.initialized = false;
+openfl_sensors_Accelerometer.supported = false;
 openfl_system_ApplicationDomain.currentDomain = new openfl_system_ApplicationDomain(null);
 openfl_system_SecurityDomain.__meta__ = { obj : { SuppressWarnings : ["checkstyle:UnnecessaryConstructor"]}};
 openfl_system_SecurityDomain.currentDomain = new openfl_system_SecurityDomain();
@@ -81041,7 +81259,7 @@ spawn_Boost.TimeOutCounter = 10.0;
 spawn_Boost.Weight = 0;
 spawn_Fly.HEIGHT = 50;
 spawn_Fly.WIDTH = 25;
-spawn_Fly.ELIPSE_RADIUS = 5;
+spawn_Fly.ELLIPSE_RADIUS = 5;
 spawn_Fly.WAVE_HEIGHT = 5;
 spawn_Fly.WAVE_LENGTH = 10;
 spawn_Fly.COLOR = 16726016;
