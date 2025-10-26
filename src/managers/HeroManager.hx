@@ -1,7 +1,7 @@
 package managers;
 
-import managers.InputManager.KeyEventType;
-import managers.InputManager.KeyEvent;
+import managers.InputManager.InputEventType;
+import managers.InputManager.InputEvent;
 import items.Hero;
 import openfl.display.Sprite;
 
@@ -37,19 +37,20 @@ class HeroManager {
 		stageHeight = layer.stage.stageHeight;
 		stageWidth = layer.stage.stageWidth;
 
-		layer.stage.addEventListener(KeyEvent.EVENT, onInputEvent);
+		layer.stage.addEventListener(InputEvent.NAME, onInputEvent);
 	}
 
-	function onInputEvent(event:KeyEvent) {
+	function onInputEvent(event:InputEvent) {
 		if (hero == null) {
 			return;
 		}
 
-		if (event.get_eventType() == KeyEventType.UP) {
-			hero.onKeyUp(event.get_keyCode());
-		}
-		else if (event.get_eventType() == KeyEventType.DOWN) {
-			hero.onKeyDown(event.get_keyCode());
+		var type:InputEventType = event.get_inputType();
+
+		if (type == InputEventType.DIR_CHANGE) {
+			hero.move(event.get_xAxis());
+		} else if (type == InputEventType.KEY_PRESS) {
+			hero.activate();
 		}
 	}
 

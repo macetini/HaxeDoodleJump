@@ -892,7 +892,7 @@ ApplicationMain.main = function() {
 ApplicationMain.create = function(config) {
 	var app = new openfl_display_Application();
 	ManifestResources.init(config);
-	app.meta.h["build"] = "22";
+	app.meta.h["build"] = "25";
 	app.meta.h["company"] = "Marko Cettina";
 	app.meta.h["file"] = "DoodleJump";
 	app.meta.h["name"] = "DoodleJump";
@@ -3726,6 +3726,7 @@ Main.prototype = $extend(items_GameItem.prototype,{
 		this.generateSpawn(deltaTime);
 		this.checkCollision();
 		this.updateHorizontalChange();
+		this.updateInput();
 		this.updateHud();
 		this.addSoonVisiblePlatforms();
 	}
@@ -3775,6 +3776,9 @@ Main.prototype = $extend(items_GameItem.prototype,{
 			var newHeight = this.difficultyManager.increaseHeight(newHorizontalChange);
 			this.hudManager.updateHeight(newHeight);
 		}
+	}
+	,updateInput: function() {
+		this.inputManager.update();
 	}
 	,updateHud: function() {
 		var horizontalChange = this.heroManager.horizontalChange;
@@ -9988,13 +9992,13 @@ hud_text_StartMessageField.prototype = $extend(openfl_text_TextField.prototype,{
 });
 var items_Hero = function() {
 	items_GameItem.call(this);
-	this.keys = [];
 	this.horizontalVelocity = 6;
 	this.verticalPull = 1;
 	this.initialJumpPower = 65;
 	this.currentJumpPower = 0;
 	this.isJumping = false;
 	this.isSuperJumpPending = false;
+	this.active = false;
 	this.get_graphics().beginFill(65280);
 	this.get_graphics().drawCircle(30,30,30);
 	this.get_graphics().endFill();
@@ -10008,34 +10012,37 @@ items_Hero.prototype = $extend(items_GameItem.prototype,{
 		this.floor = this.stage.stageHeight;
 		this.realY = this.get_y();
 	}
-	,onKeyDown: function(keyCode) {
-		this.keys[keyCode] = true;
-	}
-	,onKeyUp: function(keyCode) {
-		this.keys[keyCode] = false;
-	}
 	,update: function(deltaTime) {
 		this.currentDeltaTime = deltaTime;
+		if(this.realY + this.get_height() >= this.floor) {
+			this.die();
+		}
 		if(this.isJumping) {
-			this.checkJump();
-		} else if(this.keys[32]) {
-			this.startJump();
+			this.updateJumpMovement();
+		} else if(this.active) {
+			this.jump();
 		}
 		this.checkForThePositionChange();
-		if(this.keys[37]) {
-			this.moveLeft();
-		} else if(this.keys[39]) {
-			this.moveRight();
-		}
 	}
 	,checkJump: function() {
 		if(this.realY + this.get_height() >= this.floor) {
 			this.stopJump();
 		} else {
-			this.doJump();
+			this.updateJumpMovement();
 		}
 	}
-	,startJump: function() {
+	,move: function(direction) {
+		if(this.active) {
+			this.set_x(this.get_x() + direction * this.horizontalVelocity);
+		}
+	}
+	,activate: function() {
+		if(!this.active) {
+			this.active = true;
+			this.jump();
+		}
+	}
+	,jump: function() {
 		if(this.isSuperJumpPending) {
 			var lhs = this.initialJumpPower;
 			this.currentJumpPower = UInt.toFloat(3) * lhs;
@@ -10043,11 +10050,11 @@ items_Hero.prototype = $extend(items_GameItem.prototype,{
 			this.currentJumpPower = this.initialJumpPower;
 		}
 		this.isSuperJumpPending = false;
-		this.realY = this.get_y();
 		this.isJumping = true;
-		this.doJump();
+		this.realY = this.get_y();
+		this.updateJumpMovement();
 	}
-	,doJump: function() {
+	,updateJumpMovement: function() {
 		var jumpMovement = this.currentJumpPower * this.currentDeltaTime;
 		if(this.currentJumpPower <= 0 || this.get_y() > UInt.toFloat(150)) {
 			this.set_y(this.get_y() - jumpMovement);
@@ -10061,9 +10068,10 @@ items_Hero.prototype = $extend(items_GameItem.prototype,{
 	}
 	,activateSuperJump: function() {
 		this.isSuperJumpPending = true;
-		this.startJump();
+		this.jump();
 	}
 	,die: function() {
+		this.active = false;
 		this.stopJump();
 		this.set_x(this.stage.stageWidth / 2 - this.get_width() / 2);
 	}
@@ -10073,12 +10081,6 @@ items_Hero.prototype = $extend(items_GameItem.prototype,{
 		} else if(this.get_x() >= this.stage.stageWidth) {
 			this.set_x(-1 * this.get_width());
 		}
-	}
-	,moveLeft: function() {
-		this.set_x(this.get_x() - this.horizontalVelocity);
-	}
-	,moveRight: function() {
-		this.set_x(this.get_x() + this.horizontalVelocity);
 	}
 	,__class__: items_Hero
 });
@@ -10400,6 +10402,7 @@ js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl = function(begin,end) {
 	resultArray.set(u);
 	return resultArray.buffer;
 };
+Math.__name__ = "Math";
 var lime__$internal_backend_html5_GameDeviceData = function() {
 	this.connected = true;
 	this.buttons = [];
@@ -27073,7 +27076,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 770742;
+	this.version = 474376;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
@@ -29395,7 +29398,7 @@ managers_CollisionManager.prototype = {
 				if(platform.breakable) {
 					platform.recycle();
 				} else {
-					hero.startJump();
+					hero.jump();
 					return true;
 				}
 				break;
@@ -29411,7 +29414,7 @@ managers_CollisionManager.prototype = {
 	,__class__: managers_CollisionManager
 };
 var managers_DifficultyManager = function() {
-	this.difficultyThreashold = 100;
+	this.difficultyThreshold = 100;
 	this.height = 0.0;
 };
 $hxClasses["managers.DifficultyManager"] = managers_DifficultyManager;
@@ -29419,13 +29422,13 @@ managers_DifficultyManager.__name__ = "managers.DifficultyManager";
 managers_DifficultyManager.prototype = {
 	increaseHeight: function(horizontalChange) {
 		this.height += horizontalChange / 10;
-		if(this.height > this.difficultyThreashold) {
-			this.increaseDifficulity();
+		if(this.height > this.difficultyThreshold) {
+			this.increaseDifficulty();
 		}
 		return this.height;
 	}
-	,increaseDifficulity: function() {
-		this.difficultyThreashold *= 10;
+	,increaseDifficulty: function() {
+		this.difficultyThreshold *= 10;
 		items_Platform.MovableWeight++;
 		items_Platform.BreakableWeight++;
 		spawn_Fly.Weight++;
@@ -29469,7 +29472,7 @@ var managers_HeroManager = function(layer) {
 	this.layer = layer;
 	this.stageHeight = layer.stage.stageHeight;
 	this.stageWidth = layer.stage.stageWidth;
-	layer.stage.addEventListener("keyEvent",$bind(this,this.onInputEvent));
+	layer.stage.addEventListener("inputEvent",$bind(this,this.onInputEvent));
 };
 $hxClasses["managers.HeroManager"] = managers_HeroManager;
 managers_HeroManager.__name__ = "managers.HeroManager";
@@ -29478,10 +29481,11 @@ managers_HeroManager.prototype = {
 		if(this.hero == null) {
 			return;
 		}
-		if(event.get_eventType() == 0) {
-			this.hero.onKeyUp(event.get_keyCode());
-		} else if(event.get_eventType() == 1) {
-			this.hero.onKeyDown(event.get_keyCode());
+		var type = event.get_inputType();
+		if(type == managers_InputEventType.DIR_CHANGE) {
+			this.hero.move(event.get_xAxis());
+		} else if(type == managers_InputEventType.KEY_PRESS) {
+			this.hero.activate();
 		}
 	}
 	,addHero: function() {
@@ -29507,6 +29511,11 @@ managers_HeroManager.prototype = {
 	}
 	,__class__: managers_HeroManager
 };
+var managers_InputEventType = $hxEnums["managers.InputEventType"] = { __ename__:"managers.InputEventType",__constructs__:null
+	,DIR_CHANGE: {_hx_name:"DIR_CHANGE",_hx_index:0,__enum__:"managers.InputEventType",toString:$estr}
+	,KEY_PRESS: {_hx_name:"KEY_PRESS",_hx_index:1,__enum__:"managers.InputEventType",toString:$estr}
+};
+managers_InputEventType.__constructs__ = [managers_InputEventType.DIR_CHANGE,managers_InputEventType.KEY_PRESS];
 var openfl_events_Event = function(type,bubbles,cancelable) {
 	if(cancelable == null) {
 		cancelable = false;
@@ -29595,37 +29604,36 @@ openfl_events_Event.prototype = {
 	}
 	,__class__: openfl_events_Event
 };
-var managers_KeyEvent = function(keyCode,eventType,bubbles,cancelable) {
+var managers_InputEvent = function(direction,inputType,bubbles,cancelable) {
 	if(cancelable == null) {
 		cancelable = false;
 	}
 	if(bubbles == null) {
 		bubbles = true;
 	}
-	openfl_events_Event.call(this,"keyEvent",bubbles,cancelable);
-	this.keyCode = keyCode;
-	this.eventType = eventType;
+	openfl_events_Event.call(this,"inputEvent",bubbles,cancelable);
+	this.xAxis = direction;
+	this.inputType = inputType;
 };
-$hxClasses["managers.KeyEvent"] = managers_KeyEvent;
-managers_KeyEvent.__name__ = "managers.KeyEvent";
-managers_KeyEvent.__super__ = openfl_events_Event;
-managers_KeyEvent.prototype = $extend(openfl_events_Event.prototype,{
-	get_keyCode: function() {
-		return this.keyCode;
+$hxClasses["managers.InputEvent"] = managers_InputEvent;
+managers_InputEvent.__name__ = "managers.InputEvent";
+managers_InputEvent.__super__ = openfl_events_Event;
+managers_InputEvent.prototype = $extend(openfl_events_Event.prototype,{
+	get_xAxis: function() {
+		return this.xAxis;
 	}
-	,get_eventType: function() {
-		return this.eventType;
+	,get_inputType: function() {
+		return this.inputType;
 	}
 	,clone: function() {
-		return new managers_KeyEvent(this.keyCode,this.eventType,this.bubbles,this.cancelable);
+		return new managers_InputEvent(this.xAxis,this.inputType,this.bubbles,this.cancelable);
 	}
-	,__class__: managers_KeyEvent
+	,__class__: managers_InputEvent
 });
 var managers_InputManager = function(stage) {
 	this.stage = stage;
-	this.mouseButtonsDown = new haxe_ds_IntMap();
-	this.mouseButtonsJustPressed = new haxe_ds_IntMap();
-	this.mouseButtonsWasDown = new haxe_ds_IntMap();
+	this.direction = 0;
+	this.prevMouseX = 0;
 	this.setupKeyboardEvents();
 	this.setupMouseEvents();
 	if(openfl_sensors_Accelerometer.get_isSupported()) {
@@ -29642,28 +29650,44 @@ managers_InputManager.prototype = {
 		this.stage.addEventListener("keyUp",$bind(this,this.onKeyUp));
 	}
 	,onKeyDown: function(event) {
-		this.stage.dispatchEvent(new managers_KeyEvent(event.keyCode,1));
+		if(event.keyCode == 37) {
+			this.direction = -1;
+		} else if(event.keyCode == 39) {
+			this.direction = 1;
+		} else if(event.keyCode == 32) {
+			this.stage.dispatchEvent(new managers_InputEvent(0,managers_InputEventType.KEY_PRESS));
+		}
 	}
 	,onKeyUp: function(event) {
-		this.stage.dispatchEvent(new managers_KeyEvent(event.keyCode,0));
+		if(event.keyCode == 37 || event.keyCode == 39) {
+			this.direction = 0;
+		}
 	}
 	,setupMouseEvents: function() {
 		this.stage.addEventListener("mouseDown",$bind(this,this.onMouseDown));
-		this.stage.addEventListener("mouseUp",$bind(this,this.onMouseUp));
-		this.stage.addEventListener("mouseMove",$bind(this,this.onMouseMove));
 	}
 	,onMouseDown: function(event) {
-	}
-	,onMouseUp: function(event) {
+		this.stage.dispatchEvent(new managers_InputEvent(0,managers_InputEventType.KEY_PRESS));
 	}
 	,onMouseMove: function(event) {
-		this.mouseX = event.stageX;
-		this.mouseY = event.stageY;
+		var mouseX = event.stageX;
+		var deltaX = mouseX - this.prevMouseX;
+		this.direction = Math.sign(deltaX);
+		this.prevMouseX = mouseX;
 	}
 	,onAccelerometerUpdate: function(event) {
 		this.accelerationX = event.accelerationY;
-		this.accelerationY = event.accelerationX;
-		this.accelerationZ = event.accelerationZ;
+	}
+	,update: function() {
+		var finalDirection = this.direction;
+		if(this.accelerometer != null && this.direction == 0) {
+			if(this.accelerationX > 0.2) {
+				finalDirection = 1;
+			} else if(this.accelerationX < -0.2) {
+				finalDirection = -1;
+			}
+		}
+		this.stage.dispatchEvent(new managers_InputEvent(finalDirection,managers_InputEventType.DIR_CHANGE));
 	}
 	,__class__: managers_InputManager
 };
@@ -80343,7 +80367,7 @@ lime_utils_UInt8ClampedArray.BYTES_PER_ELEMENT = 1;
 managers_CollisionManager.HERO_COLLISION_PERCENTAGE = 0.85;
 managers_CollisionManager.PLATFORM_COLLISION_PERCENTAGE = 0.25;
 managers_DifficultyManager.HEIGHT_DIVIDER = 10;
-managers_DifficultyManager.DIFFICULITY_MULTIPLYER = 10;
+managers_DifficultyManager.DIFFICULTY_MULTIPLIER = 10;
 openfl_events_Event.ACTIVATE = "activate";
 openfl_events_Event.ADDED = "added";
 openfl_events_Event.ADDED_TO_STAGE = "addedToStage";
@@ -80382,7 +80406,9 @@ openfl_events_Event.TAB_ENABLED_CHANGE = "tabEnabledChange";
 openfl_events_Event.TAB_INDEX_CHANGE = "tabIndexChange";
 openfl_events_Event.TEXTURE_READY = "textureReady";
 openfl_events_Event.UNLOAD = "unload";
-managers_KeyEvent.EVENT = "keyEvent";
+managers_InputEvent.NAME = "inputEvent";
+managers_InputManager.ACCEL_THRESHOLD = 0.2;
+managers_InputManager.UPDATE_INTERVAL = 33;
 managers_PlatformManager.MAX_NUMBER_OF_PLATFORMS = 30;
 managers_PlatformManager.FLOOR_OFFSET = 165;
 managers_PlatformManager.SOON_VISIBLE_OFFSET = 30;

@@ -22,8 +22,6 @@ class Hero extends GameItem {
 	static inline final JUMP_BORDER:UInt = 150;
 	static inline final POWER_JUMP_MULTIPLAYER:UInt = 3;
 
-	var keys:Array<Bool>;
-
 	var horizontalVelocity:Float;
 	var verticalPull:Float;
 	var initialJumpPower:Float;
@@ -34,6 +32,8 @@ class Hero extends GameItem {
 	var currentDeltaTime:Float;
 	var isSuperJumpPending:Bool;
 
+	var active:Bool;
+
 	/**
 		The real Y position of the hero, used for calculations.
 		This is different from the display Y position due to the jumping mechanics.
@@ -43,14 +43,14 @@ class Hero extends GameItem {
 	public function new() {
 		super();
 
-		keys = [];
-
 		horizontalVelocity = 6;
 		verticalPull = 1;
 		initialJumpPower = 65;
 		currentJumpPower = 0;
 		isJumping = false;
 		isSuperJumpPending = false;
+
+		active = false;
 
 		this.graphics.beginFill(COLOR);
 		this.graphics.drawCircle(RADIUS, RADIUS, RADIUS);
@@ -64,46 +64,48 @@ class Hero extends GameItem {
 		realY = this.y;
 	}
 
-	/**
-		Handles Key Down events to update the hero's movement state.
-		@param keyCode Key code of the released key.
-	**/
-	public function onKeyDown(keyCode:Int) {
-		keys[keyCode] = true;
-	}
-
-	/**
-		Handles Key Up events to update the hero's movement state.
-		@param keyCode Key code of the released key.
-	**/
-	public function onKeyUp(keyCode:Int) {
-		keys[keyCode] = false;
-	}
-
 	override public function update(deltaTime:Float) {
 		currentDeltaTime = deltaTime;
 
-		if (isJumping) {
-			checkJump();
+		if (realY + this.height >= floor) {
+			die();
 		}
-		else if (keys[Keyboard.SPACE]) {
-			startJump();
+
+		if (isJumping) {
+			// checkJump();
+			updateJumpMovement();
+		} else if (active) {
+			jump();
 		}
 
 		checkForThePositionChange();
-
-		if (keys[Keyboard.LEFT]) {
-			moveLeft();
-		} else if (keys[Keyboard.RIGHT]) {
-			moveRight();
-		}
 	}
 
 	function checkJump() {
 		if (realY + this.height >= floor) {
 			stopJump();
 		} else {
-			doJump();
+			updateJumpMovement();
+		}
+	}
+
+	/**
+		Moves the hero horizontally based on the provided direction.
+		@param direction The direction to move in (-1 for left, 1 for right).
+	**/
+	public function move(direction:Float) {
+		if (active) {
+			this.x += direction * horizontalVelocity;
+		}
+	}
+
+	/**
+		Activates the hero and starts the jump process.
+	**/
+	public function activate() {
+		if (!active) {
+			active = true;
+			jump();
 		}
 	}
 
@@ -111,19 +113,22 @@ class Hero extends GameItem {
 		Starts the jump process. If a super jump is pending, it uses a higher jump power.
 		Otherwise, it uses the initial jump power.	
 	**/
-	public function startJump() {
+	public function jump() {
 		if (isSuperJumpPending) {
 			currentJumpPower = initialJumpPower * POWER_JUMP_MULTIPLAYER;
 		} else {
 			currentJumpPower = initialJumpPower;
 		}
+
 		isSuperJumpPending = false;
-		realY = this.y;
 		isJumping = true;
-		doJump();
+
+		realY = this.y;
+
+		updateJumpMovement();
 	}
 
-	function doJump() {
+	function updateJumpMovement() {
 		var jumpMovement:Float = currentJumpPower * currentDeltaTime;
 
 		if (currentJumpPower <= 0 || this.y > JUMP_BORDER) {
@@ -143,13 +148,14 @@ class Hero extends GameItem {
 	**/
 	public function activateSuperJump() {
 		isSuperJumpPending = true;
-		startJump();
+		jump();
 	}
 
 	/**
 		Resets the hero's position to the center of the stage and stops any jumping.
 	**/
 	public function die() {
+		active = false;
 		stopJump();
 		this.x = stage.stageWidth / 2 - this.width / 2;
 	}
@@ -160,13 +166,5 @@ class Hero extends GameItem {
 		} else if (this.x >= stage.stageWidth) {
 			this.x = -1 * (this.width);
 		}
-	}
-
-	function moveLeft() {
-		this.x -= horizontalVelocity;
-	}
-
-	function moveRight() {
-		this.x += horizontalVelocity;
 	}
 }

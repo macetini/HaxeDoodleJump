@@ -144,6 +144,8 @@ class Main extends GameItem {
 
 		updateHorizontalChange();
 
+		updateInput();
+
 		updateHud();
 
 		addSoonVisiblePlatforms();
@@ -222,6 +224,13 @@ class Main extends GameItem {
 
 			hudManager.updateHeight(newHeight);
 		}
+	}
+
+	/**
+		Updates input manager to handle user input.
+	**/
+	function updateInput() {
+		inputManager.update();
 	}
 
 	/**

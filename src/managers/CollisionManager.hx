@@ -121,7 +121,7 @@ class CollisionManager {
 					platform.recycle();
 				}
 				else {
-					hero.startJump();
+					hero.jump();
 					return true;
 				}
 

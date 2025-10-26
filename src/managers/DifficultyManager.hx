@@ -14,13 +14,13 @@ It increases the difficulty based on the player's progress and adjusts item weig
 **/
 class DifficultyManager {
 	static inline final HEIGHT_DIVIDER:Float = 10;
-	static inline final DIFFICULITY_MULTIPLYER:Float = 10;
+	static inline final DIFFICULTY_MULTIPLIER:Float = 10;
 
-	var difficultyThreashold:Float;
+	var difficultyThreshold:Float;
 	var height:Float;
 
 	public function new() {
-		difficultyThreashold = 100;
+		difficultyThreshold = 100;
 		height = 0.0;
 	}
 
@@ -35,15 +35,15 @@ class DifficultyManager {
 	public function increaseHeight(horizontalChange:Float):Float {
 		height += horizontalChange / HEIGHT_DIVIDER;
 
-		if (height > difficultyThreashold) {
-			increaseDifficulity();
+		if (height > difficultyThreshold) {
+			increaseDifficulty();
 		}
 
 		return height;
 	}
 
-	function increaseDifficulity() {
-		difficultyThreashold *= DIFFICULITY_MULTIPLYER;
+	function increaseDifficulty() {
+		difficultyThreshold *= DIFFICULTY_MULTIPLIER;
 
 		// This is a hacky way to increase the difficulty.		
 		// It should be done in a more structured way.
