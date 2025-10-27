@@ -1,5 +1,6 @@
 package managers;
 
+import openfl.text.TextField;
 import managers.meta.InputEvent;
 import openfl.ui.Keyboard;
 import openfl.events.AccelerometerEvent;
@@ -26,12 +27,13 @@ class InputManager {
 
 	// A threshold to filter out tiny movements from the accelerometer (e.g., 0.2 G's)
 	static inline final ACCEL_THRESHOLD:Float = 0.2;
-	// --- Accelerometer Update Interval in Milliseconds (~30 FPS) ---
-	static inline final UPDATE_INTERVAL:UInt = 33;
+	// --- Accelerometer Update Interval in Milliseconds ---
+	static inline final ACCEL_UPDATE_INTERVAL:UInt = 200;
+	static inline final ACCEL_TITLE_THRESHOLD:Float = 0.2;
 
 	// --- Sensor Data Tracking ---
 	var accelerometer:Accelerometer;
-	var accelerationX:Float;
+	var accTextField:TextField;
 
 	public function new(stage:Stage) {
 		this.stage = stage;
@@ -41,14 +43,7 @@ class InputManager {
 
 		setupKeyboardEvents();
 		setupMouseEvents();
-
-		// Initialize accelerometer object
-		if (Accelerometer.isSupported) {
-			accelerometer = new Accelerometer();
-			accelerometer.addEventListener(AccelerometerEvent.UPDATE, onAccelerometerUpdate);
-			// update interval (in milliseconds)
-			accelerometer.setRequestedUpdateInterval(UPDATE_INTERVAL); // ~30 FPS
-		}
+		setupAccelerometer();
 	}
 
 	// --- Keyboard Event Handlers ---
@@ -78,7 +73,7 @@ class InputManager {
 	// --- Mouse Event Handlers ---
 	function setupMouseEvents() {
 		stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-		// stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove); // Disabled, as the effect is not desired
+		// stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove); // Disabled, as the movement is not easy to control
 	}
 
 	function onMouseDown(event:MouseEvent) {
@@ -95,27 +90,42 @@ class InputManager {
 		prevMouseX = mouseX;
 	}
 
-	function onAccelerometerUpdate(event:AccelerometerEvent) {
-		// Get the absolute (magnitude) of the X and Y sensor readings
-		var absX:Float = Math.abs(event.accelerationX);
-		var absY:Float = Math.abs(event.accelerationY);
+	function setupAccelerometer() {
+		accTextField = new TextField();
+		accTextField.autoSize = LEFT;
+		accTextField.text = "";
+		stage.addChild(accTextField);
 
-		// Determine which axis (X or Y) is currently experiencing the greatest tilt
-		if (absX > absY) {
-			// The device is mostly in PORTRAIT orientation (or near it).
-			// Sensor's X-axis is dominant.
-
-			// FIX: In portrait mode, tilting right gives a NEGATIVE X-acceleration.
-			// We must invert the sign to match the expected direction (right = positive).
-			accelerationX = -event.accelerationX;
+		// Initialize accelerometer object
+		if (Accelerometer.isSupported) {
+			accelerometer = new Accelerometer();
+			accelerometer.addEventListener(AccelerometerEvent.UPDATE, onAccelerometerUpdate);
+			// update interval (in milliseconds)
+			accelerometer.setRequestedUpdateInterval(ACCEL_UPDATE_INTERVAL);
 		}
 		else {
-			// The device is mostly in LANDSCAPE orientation (or near it).
-			// Sensor's Y-axis is dominant.
+			accTextField.text = "Accelerometer not supported!";
+		}
+	}
 
-			// This was already correct: tilting the device right (usually positive Y-acceleration) 
-			// needs to be inverted to align with the game's X-direction.
-			accelerationX = event.accelerationY;
+	function onAccelerometerUpdate(event:AccelerometerEvent) {
+		var normalizedTiltX:Float = 0.0;
+		var normalizedTiltY:Float = 0.0;
+
+		var rawX:Float = event.accelerationX;
+		var rawY:Float = event.accelerationY;
+		var magnitude:Float = Math.sqrt(rawX * rawX + rawY * rawY);
+
+		if (magnitude > 0) {
+			normalizedTiltX = rawX / magnitude;
+			normalizedTiltY = rawY / magnitude;
+		}
+
+		// Cheap hack for portrait mode, not perfect but good enough
+		var finalDirection:Float = Math.abs(normalizedTiltX) < 0.8 ? normalizedTiltX : normalizedTiltY;
+
+		if (Math.abs(finalDirection) > ACCEL_TITLE_THRESHOLD) {
+			direction = -finalDirection;
 		}
 	}
 
@@ -124,20 +134,6 @@ class InputManager {
 		Combines keyboard/mouse state (this.direction) with accelerometer data.
 	**/
 	public function update() {
-		var finalDirection:Float = direction; // Start with current keyboard/mouse state
-
-		// If accelerometer is supported and keyboard/mouse isn't providing input (direction == 0)
-		if (accelerometer != null && direction == 0) {
-			if (accelerationX > ACCEL_THRESHOLD) {
-				// Tilted right
-				finalDirection = 1;
-			}
-			else if (accelerationX < -ACCEL_THRESHOLD) {
-				// Tilted left
-				finalDirection = -1;
-			}
-		}
-
-		stage.dispatchEvent(new InputEvent(finalDirection, InputEventType.DIR_CHANGE));
+		stage.dispatchEvent(new InputEvent(direction, InputEventType.DIR_CHANGE));
 	}
 }
