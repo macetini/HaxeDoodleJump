@@ -45,7 +45,7 @@ class SpawnManager {
 	}
 
 	/**
-		Entity timout update. If entity has defined Timeout than it cant be spawned until timeout has finished.
+		Entity timeout update. If entity has defined Timeout than it cant be spawned until timeout has finished.
 		This method updates the timeout for each spawn type based on the elapsed time since the last frame.
 
 		@param elapsed Elapsed time since the last frame.

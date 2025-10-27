@@ -16,6 +16,8 @@ class DifficultyManager {
 	static inline final HEIGHT_DIVIDER:Float = 10;
 	static inline final DIFFICULTY_MULTIPLIER:Float = 10;
 
+	// --- Difficulty Properties ---
+	// Not defined as constants because they could change during the game (possible future implementation)
 	var difficultyThreshold:Float;
 	var height:Float;
 

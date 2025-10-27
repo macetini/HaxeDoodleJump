@@ -95,7 +95,7 @@ class Fly extends SpawnItem {
 		Resets the timeout counter for the Fly item.
 		This is used to prepare the item for respawn after it has been used.
 	**/
-	public function resetTimeOutCounter():Void {
+	public function resetTimeOutCounter() {
 		TimeOutCounter = TIME_OUT;
 	}
 

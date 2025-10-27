@@ -32,9 +32,12 @@ import spawn.SpawnItem;
 	- platformManager: Handles platform creation, recycling, and positioning.
 	- spawnManager: Manages spawnable items, their creation, recycling, and positioning.
 	- heroManager: Controls hero creation, movement, and state.
+	- inputManager: Handles user input and updates hero movement.
 	- hudManager: Manages HUD display and updates.
 	- collisionManager: Detects and handles collisions between game objects.
 	- difficultyManager: Adjusts game difficulty and tracks player progress.
+
+	TODO - Implement state manager to handle game state transitions and persist data between levels.
 
 	@version 1.0
 	@date 2023-10-01

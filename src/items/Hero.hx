@@ -21,6 +21,8 @@ class Hero extends GameItem {
 	static inline final JUMP_BORDER:UInt = 150;
 	static inline final POWER_JUMP_MULTIPLAYER:UInt = 3;
 
+	// --- Hero Properties ---
+	// Not defined as constants because they could change during the game (possible future implementation)
 	var horizontalVelocity:Float;
 	var verticalPull:Float;
 	var initialJumpPower:Float;

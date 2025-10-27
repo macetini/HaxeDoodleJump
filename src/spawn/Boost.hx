@@ -71,7 +71,7 @@ class Boost extends SpawnItem {
 	}
 
 	/**
-		Returns the time remaining before the item can be respawned.
+		Returns the time remaining before the item can be respawn.
 		This is used to check if the item is ready to be spawned again.
 
 		@return Float The time remaining before respawn.
@@ -82,9 +82,9 @@ class Boost extends SpawnItem {
 
 	/**
 		Resets the timeout counter for the Boost item.
-		This is used to prepare the item for respawning after it has been used.
+		This is used to prepare the item for respawn after it has been used.
 	**/
-	public function resetTimeOutCounter():Void {
+	public function resetTimeOutCounter() {
 		TimeOutCounter = TIME_OUT;
 	}
 }
